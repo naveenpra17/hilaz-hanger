@@ -62,14 +62,15 @@ import { Category } from '../../core/models/category.model';
           <p class="text-red-700 text-sm">{{ error() }}</p>
           <button type="button" class="btn-primary mt-4" (click)="load()">Retry</button>
         </div>
-      } @else if (page(); as p) {
-        <div class="responsive-grid-products">
-          @for (product of p.content; track product.id) {
-            <app-product-card [product]="product" />
-          }
-        </div>
-        @if (p.content.length === 0) {
+      } @else if (page()) {
+        @if (page()!.content.length === 0) {
           <p class="text-center text-gray-500 py-12">No products found.</p>
+        } @else {
+          <div class="responsive-grid-products">
+            @for (product of page()!.content; track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
         }
       }
     </div>
