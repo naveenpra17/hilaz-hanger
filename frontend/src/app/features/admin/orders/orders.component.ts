@@ -1,0 +1,191 @@
+import { Component, signal, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { OrderService } from '../../../core/services/order.service';
+import { Order, OrderSource } from '../../../core/models/order.model';
+import { MOCK_PRODUCTS } from '../../../core/data/mock-products';
+
+@Component({
+  selector: 'app-orders',
+  standalone: true,
+  imports: [FormsModule],
+  template: `
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="font-serif text-xl font-bold">Orders</h2>
+      <button type="button" class="btn-gold text-sm" (click)="showModal.set(true)">+ Add Offline Order</button>
+    </div>
+
+    <div class="space-y-4">
+      @for (o of orders(); track o.id) {
+        <article class="section-card">
+          <div class="flex justify-between flex-wrap gap-2">
+            <div>
+              <p class="font-mono text-xs text-gray-500">{{ o.orderNumber }}</p>
+              <p class="font-semibold">{{ o.customerName }}</p>
+              <p class="text-xs text-gray-500">{{ o.customerPhone }} · {{ o.orderSource }}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold">₹{{ o.total }}</p>
+              <span class="text-xs px-2 py-0.5 rounded-full" [class.bg-green-100]="o.paid" [class.text-green-800]="o.paid" [class.bg-orange-100]="!o.paid" [class.text-orange-800]="!o.paid">
+                {{ o.paid ? 'Paid' : 'Unpaid' }}
+              </span>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (showModal()) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4 overscroll-contain" (click)="showModal.set(false)">
+        <div class="bg-white w-full sm:max-w-lg md:max-w-xl max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-xl" (click)="$event.stopPropagation()">
+          <div class="bg-burgundy-300 text-white px-4 py-3 flex justify-between items-center rounded-t-2xl">
+            <h3 class="font-serif font-semibold">Add New Offline Order</h3>
+            <button type="button" class="w-8 h-8 rounded-full bg-white/20" (click)="showModal.set(false)">×</button>
+          </div>
+
+          <form (ngSubmit)="createOrder()" class="p-4 space-y-4">
+            <section class="bg-pink-50 rounded-xl p-4 space-y-3">
+              <h4 class="font-serif text-sm text-burgundy-400">Customer Information</h4>
+              <input class="input-field" placeholder="Name *" [(ngModel)]="form.customerName" name="cname" required />
+              <input class="input-field" placeholder="Phone *" [(ngModel)]="form.customerPhone" name="cphone" required />
+              <input class="input-field" placeholder="Email (optional)" [(ngModel)]="form.customerEmail" name="cemail" />
+            </section>
+
+            <section class="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
+              <h4 class="font-serif text-sm text-yellow-800 mb-3">Order Source</h4>
+              <div class="grid grid-cols-2 gap-2">
+                @for (src of sources; track src) {
+                  <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-sm" [class.border-pink-400]="form.orderSource === src" [class.bg-green-50]="form.orderSource === src">
+                    <input type="radio" name="source" [value]="src" [(ngModel)]="form.orderSource" />
+                    {{ src }}
+                  </label>
+                }
+              </div>
+            </section>
+
+            <section>
+              <h4 class="font-serif font-bold text-sm mb-2">Order Items</h4>
+              <input class="input-field mb-3" placeholder="Search products by name or brand..." [(ngModel)]="itemSearch" name="search" />
+              @for (item of lineItems; track item.productId) {
+                <div class="flex gap-3 p-3 border border-pink-100 rounded-xl mb-2">
+                  <img [src]="item.image" class="w-14 h-14 rounded object-cover" alt="" />
+                  <div class="flex-1 text-sm">
+                    <p class="font-semibold">{{ item.name }}</p>
+                    <p class="text-gray-500">₹{{ item.price }} each</p>
+                  </div>
+                  <input type="number" class="w-12 input-field text-center p-1" [(ngModel)]="item.qty" [name]="'q'+item.productId" min="1" />
+                </div>
+              }
+              <button type="button" class="text-xs text-burgundy-600" (click)="addSampleItem()">+ Add sample item</button>
+            </section>
+
+            <section>
+              <h4 class="font-serif font-bold text-sm mb-2">Shipping Address</h4>
+              <input class="input-field mb-2" placeholder="Address *" [(ngModel)]="form.shippingStreet" name="street" />
+              <div class="grid grid-cols-3 gap-2">
+                <input class="input-field col-span-2" placeholder="City" [(ngModel)]="form.shippingCity" name="city" />
+                <input class="input-field" placeholder="Pincode" [(ngModel)]="form.shippingPincode" name="pin" />
+              </div>
+            </section>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs">Shipping Price</label>
+                <input class="input-field" type="number" [(ngModel)]="form.shippingPrice" name="ship" />
+              </div>
+              <div>
+                <label class="text-xs">Discount (₹)</label>
+                <input class="input-field" type="number" [(ngModel)]="form.discount" name="disc" />
+              </div>
+            </div>
+
+            <select class="input-field" [(ngModel)]="form.paymentMethod" name="pay">
+              <option value="UPI">UPI</option>
+              <option value="COD">Cash on Delivery</option>
+              <option value="CASH">Cash</option>
+            </select>
+
+            <div class="flex gap-4 text-sm">
+              <label class="flex items-center gap-2"><input type="checkbox" [(ngModel)]="form.paid" name="paid" /> Paid</label>
+              <label class="flex items-center gap-2"><input type="checkbox" [(ngModel)]="form.delivered" name="del" /> Delivered</label>
+            </div>
+
+            <textarea class="input-field" rows="2" placeholder="Additional notes..." [(ngModel)]="form.notes" name="notes"></textarea>
+
+            <div class="bg-pink-50 rounded-xl p-4 text-sm space-y-1">
+              <div class="flex justify-between"><span>Items Total</span><span>₹{{ itemsTotal().toFixed(2) }}</span></div>
+              <div class="flex justify-between"><span>Shipping</span><span>₹{{ form.shippingPrice.toFixed(2) }}</span></div>
+              <div class="flex justify-between font-bold text-base border-t border-pink-200 pt-2">
+                <span>Total</span><span>₹{{ (itemsTotal() + form.shippingPrice - form.discount).toFixed(2) }}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pb-4">
+              <button type="submit" class="bg-burgundy-300 text-white py-3 rounded-xl font-medium">Create Order</button>
+              <button type="button" class="border py-3 rounded-xl" (click)="showModal.set(false)">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  `,
+})
+export class OrdersComponent implements OnInit {
+  readonly orders = signal<Order[]>([]);
+  readonly showModal = signal(false);
+  readonly sources: OrderSource[] = ['WHATSAPP', 'PHONE', 'FRIEND', 'INSTAGRAM', 'WALKIN', 'OTHER'];
+  itemSearch = '';
+
+  form = {
+    customerName: 'Ajitha',
+    customerPhone: '',
+    customerEmail: '',
+    orderSource: 'INSTAGRAM' as OrderSource,
+    shippingStreet: '',
+    shippingCity: 'Coimbatore',
+    shippingPincode: '',
+    shippingPrice: 0,
+    discount: 0,
+    paymentMethod: 'COD',
+    paid: false,
+    delivered: false,
+    notes: '',
+  };
+
+  lineItems: { productId: string; name: string; price: number; image: string; qty: number }[] = [];
+
+  constructor(private orderService: OrderService) {}
+
+  ngOnInit(): void {
+    this.orderService.getOrders().subscribe((o) => this.orders.set(o));
+    this.addSampleItem();
+  }
+
+  addSampleItem(): void {
+    const p = MOCK_PRODUCTS[6];
+    if (!this.lineItems.find((i) => i.productId === p.id)) {
+      this.lineItems.push({
+        productId: p.id,
+        name: p.name,
+        price: p.price,
+        image: p.images[0]?.url ?? '',
+        qty: 1,
+      });
+    }
+  }
+
+  itemsTotal(): number {
+    return this.lineItems.reduce((s, i) => s + i.price * i.qty, 0);
+  }
+
+  createOrder(): void {
+    this.orderService
+      .createOfflineOrder({
+        ...this.form,
+        items: this.lineItems.map((i) => ({ variantId: i.productId, quantity: i.qty })),
+      })
+      .subscribe((order) => {
+        this.orders.update((list) => [order, ...list]);
+        this.showModal.set(false);
+      });
+  }
+}

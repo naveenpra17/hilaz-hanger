@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hilaz-postgres
+    environment:
+      POSTGRES_DB: hilaz_hanger
+      POSTGRES_USER: hilaz
+      POSTGRES_PASSWORD: hilaz_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+
+volumes:
+  postgres_data:

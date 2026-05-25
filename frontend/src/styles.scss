@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply min-h-screen min-h-[100dvh] overflow-x-hidden;
+  }
+
+  img {
+    @apply max-w-full h-auto;
+  }
+}
+
+@layer components {
+  /* Page containers — consistent responsive gutters */
+  .page-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .page-container-narrow {
+    @apply w-full max-w-3xl mx-auto px-4 sm:px-6;
+  }
+
+  .page-section {
+    @apply py-6 sm:py-8 lg:py-10;
+  }
+
+  .btn-primary {
+    @apply bg-burgundy-800 hover:bg-burgundy-900 active:scale-[0.98] text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all text-sm sm:text-base min-h-[44px] inline-flex items-center justify-center;
+  }
+
+  .btn-secondary {
+    @apply bg-cream-dark hover:bg-cream active:scale-[0.98] text-burgundy-800 font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-burgundy-200 transition-all text-sm sm:text-base min-h-[44px] inline-flex items-center justify-center;
+  }
+
+  .btn-gold {
+    @apply bg-gold hover:bg-gold-dark active:scale-[0.98] text-white font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full transition-all text-sm sm:text-base min-h-[40px] inline-flex items-center justify-center;
+  }
+
+  .input-field {
+    @apply w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-pink-200 bg-white text-burgundy-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-burgundy-300 focus:border-burgundy-400 text-base sm:text-sm min-h-[44px];
+  }
+
+  .section-card {
+    @apply bg-white rounded-xl sm:rounded-2xl shadow-card p-4 sm:p-5 md:p-6;
+  }
+
+  .responsive-grid-products {
+    @apply grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5;
+  }
+
+  .style-underline {
+    @apply relative inline-block;
+
+    &::after {
+      content: '';
+      @apply absolute -bottom-1 left-0 w-full h-1.5 sm:h-2 bg-gold/60 rounded-full;
+      transform: skewX(-8deg);
+    }
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors cursor-pointer whitespace-nowrap;
+  }
+
+  .chip-active {
+    @apply bg-burgundy-800 text-white border-burgundy-800;
+  }
+
+  .chip-inactive {
+    @apply bg-white text-burgundy-800 border-burgundy-200 hover:border-burgundy-400;
+  }
+
+  /* Safe area for mobile bottom nav */
+  .main-with-bottom-nav {
+    @apply pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0;
+  }
+}
