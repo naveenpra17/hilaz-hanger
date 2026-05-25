@@ -120,7 +120,12 @@ export class ShopComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Could not load products from API. Push latest backend fix to Render and redeploy.');
+          const status = err?.status;
+          this.error.set(
+            status === 0
+              ? 'Could not reach API (network/CORS). Check Render CORS settings.'
+              : `Could not load products (HTTP ${status ?? 'error'}). Redeploy latest API on Render and retry.`
+          );
           this.loading.set(false);
         },
       });

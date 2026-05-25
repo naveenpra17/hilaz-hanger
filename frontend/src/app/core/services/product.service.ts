@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, delay, map } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { catchError, delay, map, retry } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product, ProductPage } from '../models/product.model';
 import { MOCK_PRODUCTS } from '../data/mock-products';
@@ -28,6 +28,7 @@ export class ProductService {
       if (v !== undefined && v !== '') httpParams = httpParams.set(k, String(v));
     });
     return this.http.get<ProductPage>(this.api, { params: httpParams }).pipe(
+      retry({ count: 2, delay: (_err, i) => timer((i + 1) * 1500) }),
       map((page) => ({
         ...page,
         content: (page.content ?? []).map((p) => this.normalize(p)),

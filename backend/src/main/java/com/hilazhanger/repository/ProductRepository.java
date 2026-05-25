@@ -20,13 +20,12 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @EntityGraph(attributePaths = {"images", "variants"})
     Optional<Product> findById(UUID id);
 
-    // No EntityGraph here — fetch join + Page causes Hibernate 500 on production
+    // Only used when search text is non-empty (null search uses findAll — avoids PG lower(bytea) bug)
     @Query("SELECT p FROM Product p WHERE " +
-           "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:activeOnly IS NULL OR p.active = :activeOnly)")
-    Page<Product> search(@Param("search") String search, @Param("activeOnly") Boolean activeOnly, Pageable pageable);
+           "LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(COALESCE(p.brand, '')) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Product> searchByTerm(@Param("search") String search, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"images", "variants"})
     @Query("SELECT p FROM Product p WHERE p.id IN :ids")
-    List<Product> findAllWithDetailsByIdIn(@Param("ids") Collection<UUID> ids);
+    List<Product> findAllByIdIn(@Param("ids") Collection<UUID> ids);
 }

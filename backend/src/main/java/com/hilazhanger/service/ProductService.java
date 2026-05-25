@@ -28,15 +28,19 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductDtos.ProductPageDto list(String search, int page, int size) {
-        Page<Product> result = productRepository.search(
-                blankToNull(search),
-                null,
-                PageRequest.of(page, size)
-        );
+        Pageable pageable = PageRequest.of(page, size);
+        String term = blankToNull(search);
+        Page<Product> result = term == null
+                ? productRepository.findAll(pageable)
+                : productRepository.searchByTerm(term, pageable);
         List<UUID> ids = result.getContent().stream().map(Product::getId).toList();
         Map<UUID, Product> loaded = ids.isEmpty()
                 ? Map.of()
-                : productRepository.findAllWithDetailsByIdIn(ids).stream()
+                : productRepository.findAllByIdIn(ids).stream()
+                        .peek(p -> {
+                            p.getImages().size();
+                            p.getVariants().size();
+                        })
                         .collect(Collectors.toMap(Product::getId, Function.identity()));
         List<ProductDtos.ProductDto> content = result.getContent().stream()
                 .map(p -> toDto(loaded.getOrDefault(p.getId(), p)))

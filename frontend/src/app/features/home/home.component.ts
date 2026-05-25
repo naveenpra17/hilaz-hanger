@@ -77,10 +77,15 @@ export class HomeComponent implements OnInit {
         this.products.set(page.content);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set(
-          'Could not load products from API. Redeploy the latest backend on Render (products 500 fix), then refresh.'
-        );
+      error: (err) => {
+        const status = err?.status;
+        const hint =
+          status === 0
+            ? 'Network or CORS blocked the API. Check APP_CORS_ALLOWED_ORIGINS on Render includes this site URL.'
+            : status === 500
+              ? 'API returned an error. Redeploy the latest backend on Render, wait for Live, then retry.'
+              : `API request failed (${status ?? 'unknown'}).`;
+        this.error.set(`Could not load products. ${hint}`);
         this.loading.set(false);
       },
     });
