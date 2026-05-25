@@ -137,9 +137,11 @@ Replace `YOUR_USERNAME` with your GitHub username.
 - Render → Database → **Connections** → confirm `DATABASE_URL` is linked to the web service.
 - Check API **Logs** on Render for the exact error.
 
-### Shop empty / network errors
+### Shop empty / "Could not load products"
+- **Products API returns 500:** Redeploy the API after pushing latest `main` (fixes Hibernate `EntityGraph` + pagination bug on `GET /api/products`).
+- Test: `https://hilaz-hanger-api.onrender.com/api/products?page=0&size=4` should return JSON, not 500.
 - Confirm `environment.prod.ts` `apiUrl` ends with `/api`.
-- Confirm CORS includes your Vercel URL.
+- Confirm CORS includes your Vercel URL: `APP_CORS_ALLOWED_ORIGINS=https://hilaz-hanger.vercel.app,http://localhost:4200`
 - Free Render API sleeps after 15 min — first request may take ~30s.
 
 ### Vercel build fails

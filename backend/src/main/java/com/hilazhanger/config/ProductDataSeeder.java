@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Configuration
 public class ProductDataSeeder {
@@ -23,7 +24,7 @@ public class ProductDataSeeder {
                     "Premium Mulmul Cotton Set with oversized shirt and relaxed pants.",
                     "Premium Mulmul Cotton", "Butter Yellow / Pastel Blue",
                     new BigDecimal("999"), new BigDecimal("1499"),
-                    new String[]{"BESTSELLER"}, new String[]{"M", "L", "XL", "XXL"},
+                    List.of("BESTSELLER"), List.of("M", "L", "XL", "XXL"),
                     "https://images.unsplash.com/photo-1595777457583-95e059fdfcdc?w=800",
                     new Object[][]{{"Pastel Blue", "#A8D4E6", "L", 12}, {"Butter Yellow", "#F5E6A8", "M", 12}});
 
@@ -32,7 +33,7 @@ public class ProductDataSeeder {
                     "Classic high-waist denim with front slit.",
                     "Stretch Denim", "Indigo Blue",
                     new BigDecimal("499"), new BigDecimal("799"),
-                    new String[]{"NEW ARRIVAL"}, new String[]{"S", "M", "L", "XL"},
+                    List.of("NEW ARRIVAL"), List.of("S", "M", "L", "XL"),
                     "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800",
                     new Object[][]{{null, null, "M", 8}});
 
@@ -41,7 +42,7 @@ public class ProductDataSeeder {
                     "Relaxed paperbag waist trousers in sage green.",
                     "Cotton Blend", "Sage Green",
                     new BigDecimal("899"), null,
-                    new String[]{"TRENDING"}, new String[]{"S", "M", "L"},
+                    List.of("TRENDING"), List.of("S", "M", "L"),
                     "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800",
                     new Object[][]{{null, null, "L", 40}});
         };
@@ -49,7 +50,7 @@ public class ProductDataSeeder {
 
     private void seedProduct(ProductRepository repo, String name, String slug, String desc,
                              String fabric, String colorInfo, BigDecimal price, BigDecimal compare,
-                             String[] labels, String[] sizes, String imageUrl, Object[][] variants) {
+                             List<String> labels, List<String> sizes, String imageUrl, Object[][] variants) {
         Product p = Product.builder()
                 .name(name).slug(slug).description(desc).fabric(fabric).colorInfo(colorInfo)
                 .brand("Hilaz Hanger").price(price).compareAtPrice(compare)

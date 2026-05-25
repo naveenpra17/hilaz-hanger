@@ -11,9 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -31,8 +33,16 @@ public class ProductService {
                 null,
                 PageRequest.of(page, size)
         );
+        List<UUID> ids = result.getContent().stream().map(Product::getId).toList();
+        Map<UUID, Product> loaded = ids.isEmpty()
+                ? Map.of()
+                : productRepository.findAllWithDetailsByIdIn(ids).stream()
+                        .collect(Collectors.toMap(Product::getId, Function.identity()));
+        List<ProductDtos.ProductDto> content = result.getContent().stream()
+                .map(p -> toDto(loaded.getOrDefault(p.getId(), p)))
+                .toList();
         return new ProductDtos.ProductPageDto(
-                result.getContent().stream().map(this::toDto).toList(),
+                content,
                 result.getTotalElements(),
                 result.getTotalPages(),
                 result.getNumber(),
@@ -67,8 +77,8 @@ public class ProductService {
                 .compareAtPrice(req.compareAtPrice())
                 .active(req.active())
                 .expressShipping(req.expressShipping())
-                .labels(req.labels() != null ? req.labels().toArray(new String[0]) : new String[0])
-                .sizes(req.sizes() != null ? req.sizes().toArray(new String[0]) : new String[0])
+                .labels(req.labels() != null ? req.labels() : List.of())
+                .sizes(req.sizes() != null ? req.sizes() : List.of())
                 .build();
         if (req.images() != null) {
             int i = 0;
@@ -100,8 +110,8 @@ public class ProductService {
         product.setCompareAtPrice(req.compareAtPrice());
         product.setActive(req.active());
         product.setExpressShipping(req.expressShipping());
-        product.setLabels(req.labels() != null ? req.labels().toArray(new String[0]) : new String[0]);
-        product.setSizes(req.sizes() != null ? req.sizes().toArray(new String[0]) : new String[0]);
+        product.setLabels(req.labels() != null ? req.labels() : List.of());
+        product.setSizes(req.sizes() != null ? req.sizes() : List.of());
         if (req.images() != null && !req.images().isEmpty()) {
             product.getImages().clear();
             int i = 0;
@@ -132,8 +142,8 @@ public class ProductService {
                 p.getCompareAtPrice(),
                 p.isActive(),
                 p.isExpressShipping(),
-                p.getLabels() != null ? Arrays.asList(p.getLabels()) : List.of(),
-                p.getSizes() != null ? Arrays.asList(p.getSizes()) : List.of(),
+                p.getLabels() != null ? p.getLabels() : List.of(),
+                p.getSizes() != null ? p.getSizes() : List.of(),
                 p.getColors(),
                 p.getImages().stream()
                         .map(img -> new ProductDtos.ProductImageDto(img.getId(), img.getUrl(), img.getSortOrder(), img.isPrimaryImage()))

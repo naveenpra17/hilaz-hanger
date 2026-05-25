@@ -120,7 +120,7 @@ export class ShopComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Could not load products from API. Ensure Render API is redeployed and CORS is set.');
+          this.error.set('Could not load products from API. Push latest backend fix to Render and redeploy.');
           this.loading.set(false);
         },
       });

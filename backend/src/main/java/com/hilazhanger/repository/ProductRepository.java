@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,9 +20,13 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @EntityGraph(attributePaths = {"images", "variants"})
     Optional<Product> findById(UUID id);
 
-    @EntityGraph(attributePaths = {"images", "variants"})
+    // No EntityGraph here — fetch join + Page causes Hibernate 500 on production
     @Query("SELECT p FROM Product p WHERE " +
            "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "AND (:activeOnly IS NULL OR p.active = :activeOnly)")
     Page<Product> search(@Param("search") String search, @Param("activeOnly") Boolean activeOnly, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"images", "variants"})
+    @Query("SELECT p FROM Product p WHERE p.id IN :ids")
+    List<Product> findAllWithDetailsByIdIn(@Param("ids") Collection<UUID> ids);
 }

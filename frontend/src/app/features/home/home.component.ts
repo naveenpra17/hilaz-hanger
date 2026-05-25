@@ -79,7 +79,7 @@ export class HomeComponent implements OnInit {
       },
       error: () => {
         this.error.set(
-          'Could not load products. Redeploy the API on Render (security fix), then set CORS to include hilaz-hanger.vercel.app'
+          'Could not load products from API. Redeploy the latest backend on Render (products 500 fix), then refresh.'
         );
         this.loading.set(false);
       },
