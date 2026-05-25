@@ -1,7 +1,9 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
+import { CategoryService } from '../../../core/services/category.service';
+import { Category } from '../../../core/models/category.model';
 
 @Component({
   selector: 'app-site-header',
@@ -33,7 +35,23 @@ import { CartService } from '../../../core/services/cart.service';
             <nav class="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-medium shrink-0">
               <a routerLink="/" routerLinkActive="text-gold" [routerLinkActiveOptions]="{exact: true}" class="hover:text-gold transition-colors whitespace-nowrap">Home</a>
               <a routerLink="/shop" routerLinkActive="text-gold" class="hover:text-gold transition-colors whitespace-nowrap">Shop</a>
-              <span class="hover:text-gold cursor-pointer flex items-center gap-1 whitespace-nowrap">Categories ▾</span>
+              <div class="relative group">
+                <button type="button" class="hover:text-gold flex items-center gap-1 whitespace-nowrap py-2">
+                  Categories ▾
+                </button>
+                <div class="absolute top-full left-0 mt-1 w-48 bg-white text-burgundy-900 rounded-xl shadow-lg border border-burgundy-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+                  @for (cat of categories(); track cat.id) {
+                    <a
+                      [routerLink]="['/shop']"
+                      [queryParams]="{ category: cat.slug }"
+                      class="block px-4 py-2.5 text-sm hover:bg-cream"
+                    >{{ cat.name }}</a>
+                  }
+                  @if (categories().length === 0) {
+                    <span class="block px-4 py-2 text-xs text-gray-500">Loading...</span>
+                  }
+                </div>
+              </div>
             </nav>
 
             <div class="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-2 lg:mx-4 min-w-0">
@@ -82,6 +100,15 @@ import { CartService } from '../../../core/services/cart.service';
             <nav class="lg:hidden mt-3 pt-3 border-t border-white/20 flex flex-col gap-1 pb-1">
               <a routerLink="/" routerLinkActive="bg-white/10" [routerLinkActiveOptions]="{exact: true}" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center" (click)="menuOpen.set(false)">Home</a>
               <a routerLink="/shop" routerLinkActive="bg-white/10" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center" (click)="menuOpen.set(false)">Shop</a>
+              <p class="px-3 pt-2 text-xs text-white/60 uppercase tracking-wider">Categories</p>
+              @for (cat of categories(); track cat.id) {
+                <a
+                  [routerLink]="['/shop']"
+                  [queryParams]="{ category: cat.slug }"
+                  class="px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10"
+                  (click)="menuOpen.set(false)"
+                >{{ cat.name }}</a>
+              }
               <a routerLink="/saved" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Saved</a>
               <a routerLink="/login" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Profile / Login</a>
               @if (auth.isAdmin()) {
@@ -94,10 +121,16 @@ import { CartService } from '../../../core/services/cart.service';
     </header>
   `,
 })
-export class SiteHeaderComponent {
+export class SiteHeaderComponent implements OnInit {
   readonly compact = input(false);
   readonly menuOpen = signal(false);
+  readonly categories = signal<Category[]>([]);
   readonly auth = inject(AuthService);
   private readonly cart = inject(CartService);
+  private readonly categoryService = inject(CategoryService);
   readonly cartCount = this.cart.itemCount;
+
+  ngOnInit(): void {
+    this.categoryService.getCategories().subscribe((c) => this.categories.set(c));
+  }
 }

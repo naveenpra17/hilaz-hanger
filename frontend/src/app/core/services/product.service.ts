@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, delay, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product, ProductPage } from '../models/product.model';
 import { MOCK_PRODUCTS } from '../data/mock-products';
@@ -30,8 +30,9 @@ export class ProductService {
     return this.http.get<ProductPage>(this.api, { params: httpParams }).pipe(
       map((page) => ({
         ...page,
-        content: page.content.map((p) => this.normalize(p)),
-      }))
+        content: (page.content ?? []).map((p) => this.normalize(p)),
+      })),
+      catchError((err) => throwError(() => err))
     );
   }
 
@@ -71,13 +72,27 @@ export class ProductService {
       id: String(p.id),
       labels: p.labels ?? [],
       sizes: p.sizes ?? [],
-      colors: typeof p.colors === 'string' ? JSON.parse(p.colors as unknown as string) : (p.colors ?? []),
+      colors: this.parseColors(p.colors),
       images: (p.images ?? []).map((img) => ({
         ...img,
         isPrimary: (img as { isPrimary?: boolean }).isPrimary ?? (img as { primary?: boolean }).primary ?? false,
       })),
       variants: (p.variants ?? []).map((v) => ({ ...v, id: String(v.id) })),
     };
+  }
+
+  private parseColors(colors: unknown): Product['colors'] {
+    if (!colors) return [];
+    if (Array.isArray(colors)) return colors;
+    if (typeof colors === 'string') {
+      try {
+        const parsed = JSON.parse(colors);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   }
 
   private mockPage(params: {

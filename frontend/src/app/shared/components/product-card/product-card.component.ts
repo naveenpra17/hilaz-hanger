@@ -34,6 +34,7 @@ export class ProductCardComponent {
 
   primaryImage(): string {
     const p = this.product();
-    return p.images?.find((i) => i.isPrimary)?.url ?? p.images?.[0]?.url ?? '';
+    const url = p.images?.find((i) => i.isPrimary)?.url ?? p.images?.[0]?.url ?? '';
+    return url || 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600';
   }
 }
