@@ -119,7 +119,7 @@ export class ShopComponent implements OnInit {
           this.page.set(p);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           const status = err?.status;
           this.error.set(
             status === 0
