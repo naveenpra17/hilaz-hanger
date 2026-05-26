@@ -7,7 +7,7 @@ import { Product } from '../../../core/models/product.model';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <a [routerLink]="['/product', product().slug]" class="block bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg transition-shadow group">
+    <a [routerLink]="['/product', product().id]" class="block bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg transition-shadow group">
       <div class="aspect-[3/4] relative overflow-hidden">
         <img [src]="primaryImage()" [alt]="product().name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
         @for (label of product().labels.slice(0, 1); track label) {

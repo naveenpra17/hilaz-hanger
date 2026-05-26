@@ -50,8 +50,15 @@ export class ProductService {
       return of(p).pipe(delay(150));
     }
     return this.http
-      .get<Product>(`${this.api}/slug/${slug}`)
+      .get<Product>(`${this.api}/by-slug`, { params: { slug } })
       .pipe(map((p) => this.normalize(p)));
+  }
+
+  /** Load by UUID (shop links) or slug (old bookmarks). */
+  getByIdOrSlug(idOrSlug: string): Observable<Product> {
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuid.test(idOrSlug) ? this.getById(idOrSlug) : this.getBySlug(idOrSlug);
   }
 
   getById(id: string): Observable<Product> {

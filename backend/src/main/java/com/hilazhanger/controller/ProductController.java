@@ -29,22 +29,36 @@ public class ProductController {
         return productService.list(search, category, filter, sort, page, size);
     }
 
-    @GetMapping("/{id}/related")
-    public java.util.List<ProductDtos.ProductDto> related(
-            @PathVariable UUID id,
-            @RequestParam(defaultValue = "4") int limit
-    ) {
-        return productService.related(id, limit);
-    }
-
-    @GetMapping("/slug/{slug}")
-    public ProductDtos.ProductDto bySlug(@PathVariable String slug) {
+    @GetMapping("/by-slug")
+    public ProductDtos.ProductDto bySlugQuery(@RequestParam("slug") String slug) {
         return productService.getBySlug(slug);
     }
 
+    @GetMapping("/slug/{slug}")
+    public ProductDtos.ProductDto bySlugPath(@PathVariable String slug) {
+        return productService.getBySlug(slug);
+    }
+
+    @GetMapping("/{id}/related")
+    public java.util.List<ProductDtos.ProductDto> related(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "4") int limit
+    ) {
+        return productService.related(parseProductId(id), limit);
+    }
+
     @GetMapping("/{id}")
-    public ProductDtos.ProductDto byId(@PathVariable UUID id) {
-        return productService.getById(id);
+    public ProductDtos.ProductDto byId(@PathVariable String id) {
+        return productService.getById(parseProductId(id));
+    }
+
+    private static UUID parseProductId(String id) {
+        try {
+            return UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "Product not found");
+        }
     }
 
     @PostMapping

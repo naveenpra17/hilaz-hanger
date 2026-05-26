@@ -376,7 +376,13 @@ export class ProductFormComponent implements OnInit {
 
     req.subscribe({
       next: () => this.router.navigate(['/admin/products']),
-      error: () => this.toast.set('Product creation failed. Please try again.'),
+      error: (err) => {
+        const msg =
+          typeof err?.error === 'string'
+            ? err.error
+            : err?.error?.message ?? 'Product save failed. Please try again.';
+        this.toast.set(msg);
+      },
     });
   }
 }

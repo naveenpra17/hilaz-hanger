@@ -16,7 +16,14 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
   standalone: true,
   imports: [RouterLink, FormsModule, ProductCardComponent],
   template: `
-    @if (product(); as p) {
+    @if (loading()) {
+      <div class="page-container page-section max-w-6xl text-center py-16 text-burgundy-700">Loading product…</div>
+    } @else if (loadError()) {
+      <div class="page-container page-section max-w-6xl text-center py-16 space-y-4">
+        <p class="text-burgundy-800">{{ loadError() }}</p>
+        <a routerLink="/shop" class="btn-primary inline-block">Back to shop</a>
+      </div>
+    } @else if (product(); as p) {
       <div class="page-container page-section max-w-6xl">
         <a routerLink="/shop" class="text-sm text-burgundy-600 mb-4 inline-flex items-center min-h-[44px]">← Back</a>
 
@@ -26,12 +33,12 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
           @for (label of p.labels; track label) {
             <span class="absolute top-3 right-3 bg-burgundy-800 text-white text-xs font-bold px-2 py-1 rounded uppercase">{{ label }}</span>
           }
-          <span class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">{{ imageIndex() + 1 }} / {{ p.images.length }}</span>
+          <span class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">{{ imageIndex() + 1 }} / {{ (p.images?.length ?? 0) || 1 }}</span>
           <button type="button" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80" (click)="prevImage(p)">‹</button>
           <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80" (click)="nextImage(p)">›</button>
         </div>
 
-        @if (p.images.length > 1) {
+        @if ((p.images?.length ?? 0) > 1) {
           <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
             <span class="text-xs text-gray-500 self-center mr-1">GALLERY</span>
             @for (img of p.images; track $index) {
@@ -175,6 +182,8 @@ export class ProductDetailComponent {
   readonly auth = inject(AuthService);
 
   readonly wishlistMsg = signal('');
+  readonly loading = signal(true);
+  readonly loadError = signal('');
   readonly product = signal<Product | null>(null);
   readonly related = signal<Product[]>([]);
   readonly reviews = signal<Review[]>([]);
@@ -191,13 +200,25 @@ export class ProductDetailComponent {
 
   constructor(private productService: ProductService) {
     this.route.paramMap
-      .pipe(switchMap((params) => this.productService.getBySlug(params.get('slug')!)))
-      .subscribe((p) => {
-        this.product.set(p);
-        this.seo.setProduct(p);
-        this.selectedSize.set(p.sizes[0] ?? null);
-        this.selectedColor.set(p.colors[0] ?? null);
-        this.productService.getRelated(p.id).subscribe((list) => this.related.set(list));
+      .pipe(switchMap((params) => {
+        this.loading.set(true);
+        this.loadError.set('');
+        return this.productService.getByIdOrSlug(params.get('id')!);
+      }))
+      .subscribe({
+        next: (p) => {
+          this.product.set(p);
+          this.loading.set(false);
+          this.seo.setProduct(p);
+          this.selectedSize.set(p.sizes?.[0] ?? null);
+          this.selectedColor.set(p.colors?.[0] ?? null);
+          this.productService.getRelated(p.id).subscribe((list) => this.related.set(list));
+        },
+        error: () => {
+          this.product.set(null);
+          this.loading.set(false);
+          this.loadError.set('This product could not be loaded. It may have been removed.');
+        },
       });
   }
 

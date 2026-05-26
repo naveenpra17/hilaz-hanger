@@ -14,8 +14,15 @@ import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-    @EntityGraph(attributePaths = {"images", "variants"})
-    Optional<Product> findBySlug(String slug);
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN FETCH p.images " +
+           "LEFT JOIN FETCH p.variants " +
+           "WHERE p.slug = :slug")
+    Optional<Product> findBySlug(@Param("slug") String slug);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, UUID id);
 
     @EntityGraph(attributePaths = {"images", "variants"})
     Optional<Product> findById(UUID id);

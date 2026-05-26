@@ -39,7 +39,7 @@ export class SeoService {
       product.metaDescription?.trim() ||
       (product.description?.slice(0, 160) ?? `Shop ${product.name} at Hilaz Hanger.`);
     const image = product.images?.[0]?.url;
-    this.setPage(title, description, image, `/product/${product.slug}`);
+    this.setPage(title, description, image, `/product/${product.id}`);
     this.setJsonLd({
       '@context': 'https://schema.org',
       '@type': 'Product',

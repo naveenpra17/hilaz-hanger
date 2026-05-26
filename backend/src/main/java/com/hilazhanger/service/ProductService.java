@@ -104,10 +104,11 @@ public class ProductService {
 
     @Transactional
     public ProductDtos.ProductDto create(ProductDtos.CreateProductRequest req) {
+        String slug = resolveUniqueSlug(req.slug(), null);
         Product product = Product.builder()
                 .name(req.name())
                 .brand(req.brand() != null ? req.brand() : "Hilaz Hanger")
-                .slug(req.slug())
+                .slug(slug)
                 .description(req.description())
                 .fabric(req.fabric())
                 .colorInfo(req.colorInfo())
@@ -123,9 +124,12 @@ public class ProductService {
         if (req.images() != null) {
             int i = 0;
             for (ProductDtos.ProductImageDto img : req.images()) {
+                if (img.url() == null || img.url().isBlank()) {
+                    continue;
+                }
                 ProductImage pi = ProductImage.builder()
                         .product(product)
-                        .url(img.url())
+                        .url(img.url().trim())
                         .cloudinaryPublicId(img.publicId())
                         .sortOrder(i++)
                         .primaryImage(img.isPrimary())
@@ -143,7 +147,7 @@ public class ProductService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         product.setName(req.name());
         product.setBrand(req.brand() != null ? req.brand() : "Hilaz Hanger");
-        product.setSlug(req.slug());
+        product.setSlug(resolveUniqueSlug(req.slug(), id));
         product.setDescription(req.description());
         product.setFabric(req.fabric());
         product.setColorInfo(req.colorInfo());
@@ -159,9 +163,12 @@ public class ProductService {
             product.getImages().clear();
             int i = 0;
             for (ProductDtos.ProductImageDto img : req.images()) {
+                if (img.url() == null || img.url().isBlank()) {
+                    continue;
+                }
                 product.getImages().add(ProductImage.builder()
                         .product(product)
-                        .url(img.url())
+                        .url(img.url().trim())
                         .cloudinaryPublicId(img.publicId())
                         .sortOrder(i++)
                         .primaryImage(img.isPrimary())
@@ -264,5 +271,33 @@ public class ProductService {
 
     private String blankToNull(String s) {
         return s == null || s.isBlank() ? null : s;
+    }
+
+    /** Avoid duplicate-key 500 when two products share the same slug (e.g. same product name). */
+    private String resolveUniqueSlug(String requestedSlug, UUID excludeProductId) {
+        String base = normalizeSlug(requestedSlug);
+        if (base.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product slug is required");
+        }
+        String candidate = base;
+        int suffix = 2;
+        while (slugTaken(candidate, excludeProductId)) {
+            candidate = base + "-" + suffix++;
+        }
+        return candidate;
+    }
+
+    private boolean slugTaken(String slug, UUID excludeProductId) {
+        if (excludeProductId == null) {
+            return productRepository.existsBySlug(slug);
+        }
+        return productRepository.existsBySlugAndIdNot(slug, excludeProductId);
+    }
+
+    private static String normalizeSlug(String slug) {
+        if (slug == null) {
+            return "";
+        }
+        return slug.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-+|-+$)", "");
     }
 }
