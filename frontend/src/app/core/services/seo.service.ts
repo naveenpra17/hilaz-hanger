@@ -7,8 +7,8 @@ import { environment } from '../../../environments/environment';
 export class SeoService {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
-  private readonly siteName = 'Hilaz Hanger';
-  private readonly siteUrl = environment.siteUrl ?? 'https://hilaz-hanger.vercel.app';
+  private readonly siteName = 'HILAZ HANGER';
+  private readonly siteUrl = environment.siteUrl ?? 'https://hilazhanger.shop';
 
   setDefault(): void {
     this.setPage(

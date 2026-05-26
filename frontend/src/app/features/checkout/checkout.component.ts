@@ -64,12 +64,20 @@ import { SavedAddress } from '../../core/models/address.model';
         </section>
 
         <section class="mb-6">
-          <label class="block text-sm font-medium mb-2">Payment Method</label>
+          <h2 class="font-serif font-bold mb-2">Secure prepaid payment</h2>
+          <p class="text-xs text-gray-600 mb-3">
+            Cash on Delivery (COD) is not available. Pay securely with UPI, cards, or netbanking via Razorpay.
+          </p>
+          <label class="block text-sm font-medium mb-2">Payment method</label>
           <select class="input-field" [(ngModel)]="paymentMethod">
-            <option value="UPI">UPI (Razorpay)</option>
-            <option value="CARD">Card (Razorpay)</option>
-            <option value="COD">Cash on Delivery</option>
+            <option value="UPI">UPI</option>
+            <option value="CARD">Credit / Debit Card</option>
           </select>
+          <div class="flex flex-wrap gap-2 mt-4 text-xs text-gray-600">
+            <span class="px-2 py-1 bg-green-50 text-green-800 rounded border border-green-200">🔒 SSL secured</span>
+            <span class="px-2 py-1 bg-blue-50 text-blue-800 rounded border border-blue-200">Razorpay</span>
+            <span class="px-2 py-1 bg-burgundy-50 text-burgundy-800 rounded border border-burgundy-200">Prepaid only</span>
+          </div>
         </section>
 
         <div class="bg-pink-50 rounded-2xl p-4 space-y-2 text-sm mb-6">
@@ -100,7 +108,7 @@ import { SavedAddress } from '../../core/models/address.model';
           [disabled]="loading()"
           (click)="placeOrder()"
         >
-          {{ loading() ? 'Processing...' : paymentMethod === 'COD' ? 'Place Order' : 'Pay with Razorpay' }}
+          {{ loading() ? 'Processing...' : 'Pay securely with Razorpay' }}
         </button>
       }
       <a routerLink="/cart" class="block text-center text-sm text-gray-500 mt-4">← Back to cart</a>

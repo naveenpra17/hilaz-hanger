@@ -12,7 +12,8 @@ public final class MiscDtos {
     public record ContactRequest(
             @NotBlank String name,
             @Email @NotBlank String email,
-            @NotBlank String message
+            @NotBlank String message,
+            String website
     ) {}
 
     public record ContactResponse(String message) {}

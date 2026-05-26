@@ -22,10 +22,12 @@ import { StoreConfigService } from '../../../core/services/store-config.service'
           <div class="bg-white/5 rounded-xl p-4">
             <h4 class="font-semibold mb-2 text-gold-light">Support</h4>
             <ul class="space-y-1 text-white/80">
-              <li><a routerLink="/page/faq" class="hover:text-white">FAQ</a></li>
-              <li><a routerLink="/page/returns" class="hover:text-white">Return & Exchange</a></li>
-              <li><a routerLink="/page/shipping" class="hover:text-white">Shipping</a></li>
-              <li><a routerLink="/track-order" class="hover:text-white">Track order</a></li>
+              <li><a routerLink="/page/faq" class="hover:text-white">FAQs</a></li>
+              <li><a routerLink="/page/size-guide" class="hover:text-white">Size Guide</a></li>
+              <li><a routerLink="/page/returns" class="hover:text-white">Return & Refund</a></li>
+              <li><a routerLink="/page/shipping" class="hover:text-white">Shipping Policy</a></li>
+              <li><a routerLink="/track-order" class="hover:text-white">Order Tracking</a></li>
+              <li><a routerLink="/saved" class="hover:text-white">Wishlist</a></li>
               <li><a routerLink="/contact" class="hover:text-white">Contact</a></li>
             </ul>
           </div>

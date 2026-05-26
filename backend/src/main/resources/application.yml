@@ -51,17 +51,19 @@ app:
     key-secret: ${RAZORPAY_KEY_SECRET:}
     webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
   frontend:
-    url: ${APP_FRONTEND_URL:https://hilaz-hanger.vercel.app}
+    url: ${APP_FRONTEND_URL:https://hilazhanger.shop}
   gst:
     rate-percent: ${APP_GST_RATE_PERCENT:18}
   store:
-    name: ${APP_STORE_NAME:Hilaz Hanger}
+    name: ${APP_STORE_NAME:HILAZ HANGER}
     gstin: ${APP_STORE_GSTIN:}
-    address: ${APP_STORE_ADDRESS:Coimbatore, Tamil Nadu, India}
-    phone: ${APP_STORE_PHONE:+919876543210}
+    address: ${APP_STORE_ADDRESS:338, Kalaingar Nagar, Chettipalayam, Coimbatore – 641201, Tamil Nadu, India}
+    phone: ${APP_STORE_PHONE:+916383799574}
     email: ${APP_STORE_EMAIL:hello@hilazhanger.com}
-    whatsapp: ${APP_STORE_WHATSAPP:+919876543210}
-    instagram: ${APP_STORE_INSTAGRAM:https://www.instagram.com/hilazhanger}
+    whatsapp: ${APP_STORE_WHATSAPP:+916383799574}
+    instagram: ${APP_STORE_INSTAGRAM:https://www.instagram.com/thehilaz.hanger}
+  payments:
+    cod-enabled: false
   mail:
     enabled: ${APP_MAIL_ENABLED:false}
     from: ${APP_MAIL_FROM:noreply@hilazhanger.com}

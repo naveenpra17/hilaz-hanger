@@ -9,7 +9,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 
@@ -25,22 +27,22 @@ public class StoreController {
     @Value("${app.mail.from:noreply@hilazhanger.com}")
     private String mailFrom;
 
-    @Value("${app.store.name:Hilaz Hanger}")
+    @Value("${app.store.name:HILAZ HANGER}")
     private String storeName;
 
-    @Value("${app.store.phone:+919876543210}")
+    @Value("${app.store.phone:+916383799574}")
     private String storePhone;
 
     @Value("${app.store.email:hello@hilazhanger.com}")
     private String storeEmail;
 
-    @Value("${app.store.whatsapp:+919876543210}")
+    @Value("${app.store.whatsapp:+916383799574}")
     private String whatsappNumber;
 
-    @Value("${app.store.instagram:https://www.instagram.com/hilazhanger}")
+    @Value("${app.store.instagram:https://www.instagram.com/thehilaz.hanger}")
     private String instagramUrl;
 
-    @Value("${app.store.address:Coimbatore, Tamil Nadu, India}")
+    @Value("${app.store.address:338, Kalaingar Nagar, Chettipalayam, Coimbatore – 641201, Tamil Nadu, India}")
     private String storeAddress;
 
     public StoreController(NewsletterSubscriberRepository newsletterRepository,
@@ -53,6 +55,9 @@ public class StoreController {
 
     @PostMapping("/contact")
     public MiscDtos.ContactResponse contact(@Valid @RequestBody MiscDtos.ContactRequest request) {
+        if (request.website() != null && !request.website().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid submission");
+        }
         log.info("Contact form: {} <{}> — {}", request.name(), request.email(), request.message());
         return new MiscDtos.ContactResponse("Thank you! We will get back to you within 24 hours.");
     }

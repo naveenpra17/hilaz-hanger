@@ -132,7 +132,7 @@ import { Product } from '../../../core/models/product.model';
 
             <select class="input-field" [(ngModel)]="form.paymentMethod" name="pay">
               <option value="UPI">UPI</option>
-              <option value="COD">Cash on Delivery</option>
+              <option value="CASH">Cash (in-store / walk-in)</option>
               <option value="CASH">Cash</option>
             </select>
 
@@ -179,7 +179,7 @@ export class OrdersComponent implements OnInit {
     shippingPincode: '',
     shippingPrice: 0,
     discount: 0,
-    paymentMethod: 'COD',
+    paymentMethod: 'UPI',
     paid: false,
     delivered: false,
     notes: '',

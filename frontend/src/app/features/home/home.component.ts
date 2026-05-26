@@ -3,7 +3,9 @@ import { RouterLink } from '@angular/router';
 import { HeroCarouselComponent } from '../../shared/components/hero-carousel/hero-carousel.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { ProductService } from '../../core/services/product.service';
+import { StoreConfigService } from '../../core/services/store-config.service';
 import { Product } from '../../core/models/product.model';
+import { BRAND } from '../../core/content/brand-content';
 
 @Component({
   selector: 'app-home',
@@ -33,6 +35,17 @@ import { Product } from '../../core/models/product.model';
         </div>
       </div>
 
+      <section class="mt-10 section-card text-center">
+        <h2 class="font-serif text-lg font-semibold text-burgundy-900 mb-2">Follow {{ BRAND.name }}</h2>
+        <p class="text-sm text-gray-600 mb-4">New drops &amp; styling on Instagram {{ BRAND.instagramHandle }}</p>
+        <a
+          [href]="store.instagramUrl()"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-secondary inline-block text-sm"
+        >View on Instagram</a>
+      </section>
+
       <div class="mt-10">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-serif text-xl font-semibold text-burgundy-900">Trending Now</h2>
@@ -60,6 +73,8 @@ import { Product } from '../../core/models/product.model';
   `,
 })
 export class HomeComponent implements OnInit {
+  readonly BRAND = BRAND;
+  readonly store = inject(StoreConfigService);
   private readonly productService = inject(ProductService);
   readonly products = signal<Product[]>([]);
   readonly loading = signal(true);

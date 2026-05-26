@@ -92,7 +92,7 @@ import { onImageError, PLACEHOLDER_PRODUCT } from '../../core/constants/media-ur
         <div class="mt-6">
           <div class="flex justify-between items-center mb-2">
             <p class="text-xs font-semibold tracking-wider text-gray-600">SIZE</p>
-            <a routerLink="/page/shipping" class="text-xs text-burgundy-600 underline">Size guide</a>
+            <a routerLink="/page/size-guide" class="text-xs text-burgundy-600 underline">Size guide</a>
           </div>
           <div class="flex flex-wrap gap-2">
             @for (size of p.sizes; track size) {

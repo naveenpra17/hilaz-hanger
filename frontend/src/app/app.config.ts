@@ -4,9 +4,11 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { AnalyticsService } from './core/services/analytics.service';
+import { SeoService } from './core/services/seo.service';
 
-function initAnalytics(analytics: AnalyticsService) {
+function initApp(analytics: AnalyticsService, seo: SeoService) {
   return () => {
+    seo.setDefault();
     analytics.init();
   };
 }
@@ -18,8 +20,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     {
       provide: APP_INITIALIZER,
-      useFactory: initAnalytics,
-      deps: [AnalyticsService],
+      useFactory: initApp,
+      deps: [AnalyticsService, SeoService],
       multi: true,
     },
   ],

@@ -80,7 +80,8 @@ public class OrderService {
     }
 
     private OrderDtos.CheckoutResponse finalizeCheckout(Order order, String paymentMethod) {
-        boolean requiresPayment = !"COD".equalsIgnoreCase(paymentMethod);
+        rejectCod(paymentMethod);
+        boolean requiresPayment = true;
         if (requiresPayment) {
             RazorpayService.RazorpayOrderResult rz = razorpayService.createOrder(order.getOrderNumber(), order.getTotal());
             order.setRazorpayOrderId(rz.razorpayOrderId());
@@ -93,12 +94,16 @@ public class OrderService {
                     true
             );
         }
-        // COD: order is confirmed; payment collected on delivery
-        order.setStatus(OrderStatus.CONFIRMED);
-        order.setPaymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "COD");
-        order = orderRepository.save(order);
-        notificationService.sendOrderConfirmation(order);
-        return new OrderDtos.CheckoutResponse(toDto(order), null, razorpayService.getKeyId(), 0L, false);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prepaid payment is required");
+    }
+
+    private void rejectCod(String paymentMethod) {
+        if (paymentMethod != null && "COD".equalsIgnoreCase(paymentMethod.trim())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cash on Delivery is not available. Please pay online via UPI or card."
+            );
+        }
     }
 
     @Transactional
@@ -300,6 +305,7 @@ public class OrderService {
 
     private Order buildOrder(UUID userId, String name, String email, String phone, OrderSource source,
                              OrderDtos.CheckoutRequest req, boolean paid, boolean delivered) {
+        rejectCod(req.paymentMethod());
         List<OrderItem> items = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 

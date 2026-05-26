@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 public class SeoController {
@@ -18,7 +19,7 @@ public class SeoController {
 
     public SeoController(
             ProductRepository productRepository,
-            @Value("${app.frontend.url:https://hilaz-hanger.vercel.app}") String siteUrl
+            @Value("${app.frontend.url:https://hilazhanger.shop}") String siteUrl
     ) {
         this.productRepository = productRepository;
         this.siteUrl = siteUrl.endsWith("/") ? siteUrl.substring(0, siteUrl.length() - 1) : siteUrl;
@@ -32,9 +33,14 @@ public class SeoController {
         xml.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
         appendUrl(xml, siteUrl + "/", "daily", "1.0", lastmod);
         appendUrl(xml, siteUrl + "/shop", "daily", "0.9", lastmod);
-        appendUrl(xml, siteUrl + "/contact", "monthly", "0.5", lastmod);
+        appendUrl(xml, siteUrl + "/contact", "monthly", "0.6", lastmod);
+        appendUrl(xml, siteUrl + "/track-order", "monthly", "0.6", lastmod);
+        appendUrl(xml, siteUrl + "/saved", "weekly", "0.5", lastmod);
+        for (String slug : List.of("about", "faq", "privacy", "shipping", "returns", "terms", "size-guide")) {
+            appendUrl(xml, siteUrl + "/page/" + slug, "monthly", "0.5", lastmod);
+        }
         for (Product p : productRepository.findByActiveTrue()) {
-            appendUrl(xml, siteUrl + "/product/" + p.getSlug(), "weekly", "0.8", lastmod);
+            appendUrl(xml, siteUrl + "/product/" + p.getId(), "weekly", "0.8", lastmod);
         }
         xml.append("</urlset>");
         return xml.toString();

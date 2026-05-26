@@ -9,7 +9,12 @@ export class StoreService {
 
   constructor(private http: HttpClient) {}
 
-  contact(body: { name: string; email: string; message: string }): Observable<{ message: string }> {
+  contact(body: {
+    name: string;
+    email: string;
+    message: string;
+    website?: string;
+  }): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.api}/contact`, body);
   }
 
