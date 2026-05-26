@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findTop10ByOrderByCreatedAtDesc();
     List<Order> findAllByOrderByCreatedAtDesc();
+
+    List<Order> findByUserIdOrderByCreatedAtDesc(UUID userId);
 }

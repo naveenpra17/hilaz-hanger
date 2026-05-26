@@ -8,6 +8,13 @@ import { Product } from '../../../core/models/product.model';
 const LABEL_OPTIONS = ['BESTSELLER', 'NEW ARRIVAL', 'TRENDING', 'FLASH SALE'];
 const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
+interface GalleryImage {
+  url: string;
+  publicId: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
 @Component({
   selector: 'app-product-form',
   standalone: true,
@@ -21,17 +28,28 @@ const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
     <form (ngSubmit)="onSubmit()" class="w-full max-w-2xl mx-auto space-y-4 sm:space-y-6">
       <div class="section-card space-y-3">
-        <h3 class="font-semibold text-burgundy-800 border-b pb-2">Product Image</h3>
-        <div class="flex flex-col sm:flex-row gap-4 items-start">
-          <img [src]="previewImage" alt="Preview" class="w-32 h-40 rounded-xl object-cover border" />
-          <div class="flex-1 w-full space-y-2">
-            <input type="file" accept="image/*" class="text-sm w-full" (change)="onFileSelected($event)" [disabled]="uploading()" />
-            @if (uploading()) {
-              <p class="text-xs text-burgundy-600">Uploading to Cloudinary...</p>
-            }
-            <p class="text-xs text-gray-500">Or paste image URL:</p>
-            <input class="input-field text-sm" [(ngModel)]="previewImage" name="imageUrl" />
-          </div>
+        <h3 class="font-semibold text-burgundy-800 border-b pb-2">Product gallery</h3>
+        <div class="flex flex-wrap gap-3">
+          @for (img of galleryImages; track $index) {
+            <div class="relative w-24 h-32 rounded-xl overflow-hidden border-2" [class.border-gold]="img.isPrimary" [class.border-gray-200]="!img.isPrimary">
+              <img [src]="img.url" alt="" class="w-full h-full object-cover" />
+              @if (img.isPrimary) {
+                <span class="absolute top-0 left-0 bg-gold text-burgundy-900 text-[8px] font-bold px-1">PRIMARY</span>
+              }
+              <div class="absolute bottom-0 inset-x-0 flex bg-black/50">
+                <button type="button" class="flex-1 text-white text-[10px] py-1" (click)="setPrimary($index)">★</button>
+                <button type="button" class="flex-1 text-white text-[10px] py-1" (click)="removeImage($index)">×</button>
+              </div>
+            </div>
+          }
+        </div>
+        <input type="file" accept="image/*" class="text-sm w-full" (change)="onFileSelected($event)" [disabled]="uploading()" />
+        @if (uploading()) {
+          <p class="text-xs text-burgundy-600">Uploading to Cloudinary...</p>
+        }
+        <div class="flex gap-2">
+          <input class="input-field text-sm flex-1" placeholder="Paste image URL" [(ngModel)]="newImageUrl" name="newUrl" />
+          <button type="button" class="btn-secondary text-sm shrink-0" (click)="addImageUrl()">Add URL</button>
         </div>
       </div>
 
@@ -104,7 +122,7 @@ const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
         <h3 class="font-semibold text-burgundy-800 border-b pb-2 mb-3">Product Preview</h3>
         <div class="flex gap-4">
           <div class="relative w-32 h-40 rounded-xl overflow-hidden shrink-0 bg-gray-100">
-            <img [src]="previewImage" alt="Preview" class="w-full h-full object-cover" />
+            <img [src]="primaryPreviewUrl()" alt="Preview" class="w-full h-full object-cover" />
             @if (labels[0]) {
               <span class="absolute top-1 left-1 bg-blue-900 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">{{ labels[0] }}</span>
             }
@@ -140,8 +158,15 @@ export class ProductFormComponent implements OnInit {
   readonly toast = signal('');
   readonly sizeOptions = SIZE_OPTIONS;
   readonly labelOptions = LABEL_OPTIONS;
-  previewImage = 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400';
-  cloudinaryPublicId = '';
+  galleryImages: GalleryImage[] = [
+    {
+      url: 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400',
+      publicId: '',
+      isPrimary: true,
+      sortOrder: 0,
+    },
+  ];
+  newImageUrl = '';
   readonly uploading = signal(false);
 
   private readonly uploadService = inject(UploadService);
@@ -152,6 +177,40 @@ export class ProductFormComponent implements OnInit {
     private productService: ProductService
   ) {}
 
+  primaryPreviewUrl(): string {
+    return this.galleryImages.find((i) => i.isPrimary)?.url ?? this.galleryImages[0]?.url ?? '';
+  }
+
+  setPrimary(index: number): void {
+    this.galleryImages = this.galleryImages.map((img, i) => ({ ...img, isPrimary: i === index }));
+  }
+
+  removeImage(index: number): void {
+    if (this.galleryImages.length <= 1) {
+      this.toast.set('At least one image is required.');
+      return;
+    }
+    const wasPrimary = this.galleryImages[index].isPrimary;
+    this.galleryImages = this.galleryImages.filter((_, i) => i !== index);
+    if (wasPrimary) this.galleryImages[0].isPrimary = true;
+    this.reindexGallery();
+  }
+
+  addImageUrl(): void {
+    const url = this.newImageUrl.trim();
+    if (!url) return;
+    this.galleryImages = [
+      ...this.galleryImages,
+      { url, publicId: '', isPrimary: this.galleryImages.length === 0, sortOrder: this.galleryImages.length },
+    ];
+    this.newImageUrl = '';
+    this.reindexGallery();
+  }
+
+  reindexGallery(): void {
+    this.galleryImages = this.galleryImages.map((img, i) => ({ ...img, sortOrder: i }));
+  }
+
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -159,8 +218,17 @@ export class ProductFormComponent implements OnInit {
     this.toast.set('');
     this.uploadService.uploadProductImage(file).subscribe({
       next: (res) => {
-        this.previewImage = res.url;
-        this.cloudinaryPublicId = res.publicId;
+        const isFirst = this.galleryImages.length === 0;
+        this.galleryImages = [
+          ...this.galleryImages,
+          {
+            url: res.url,
+            publicId: res.publicId,
+            isPrimary: isFirst,
+            sortOrder: this.galleryImages.length,
+          },
+        ];
+        this.reindexGallery();
         this.uploading.set(false);
       },
       error: (err) => {
@@ -189,7 +257,14 @@ export class ProductFormComponent implements OnInit {
     this.compareAtPrice = p.compareAtPrice;
     this.selectedSizes = p.sizes?.length ? [...p.sizes] : [...new Set((p.variants ?? []).map((v) => v.size))];
     this.labels = [...(p.labels ?? [])];
-    this.previewImage = p.images[0]?.url ?? this.previewImage;
+    if (p.images?.length) {
+      this.galleryImages = p.images.map((img, i) => ({
+        url: img.url,
+        publicId: '',
+        isPrimary: img.isPrimary ?? i === 0,
+        sortOrder: img.sortOrder ?? i,
+      }));
+    }
     const stocks = (p.variants ?? []).map((v) => v.stockQuantity);
     if (stocks.length) {
       this.defaultStockPerSize = Math.round(stocks.reduce((a, b) => a + b, 0) / stocks.length);
@@ -254,14 +329,12 @@ export class ProductFormComponent implements OnInit {
       slug: this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       defaultStockPerSize: this.defaultStockPerSize,
       variants,
-      images: [
-        {
-          url: this.previewImage,
-          publicId: this.cloudinaryPublicId || null,
-          sortOrder: 0,
-          isPrimary: true,
-        },
-      ],
+      images: this.galleryImages.map((img) => ({
+        url: img.url,
+        publicId: img.publicId || null,
+        sortOrder: img.sortOrder,
+        isPrimary: img.isPrimary,
+      })),
     };
 
     const id = this.route.snapshot.paramMap.get('id');

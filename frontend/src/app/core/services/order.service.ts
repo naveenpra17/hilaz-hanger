@@ -102,6 +102,18 @@ export class OrderService {
       .pipe(map((o) => this.normalizeOrder(o)));
   }
 
+  getMyOrders(): Observable<Order[]> {
+    return this.http
+      .get<Order[]>(`${this.api}/orders/mine`)
+      .pipe(map((orders) => orders.map((o) => this.normalizeOrder(o))));
+  }
+
+  updateStatus(orderId: string, status: Order['status']): Observable<Order> {
+    return this.http
+      .patch<Order>(`${this.api}/admin/orders/${orderId}/status`, { status })
+      .pipe(map((o) => this.normalizeOrder(o)));
+  }
+
   markPaid(orderId: string): Observable<Order> {
     if (this.useMock) {
       const order = MOCK_ORDERS.find((o) => o.id === orderId);

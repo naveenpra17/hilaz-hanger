@@ -41,6 +41,12 @@ public class OrderController {
         return orderService.verifyPayment(request);
     }
 
+    @GetMapping("/mine")
+    public java.util.List<OrderDtos.OrderDto> myOrders(Authentication auth) {
+        AuthDtos.UserDto user = loadUser(auth);
+        return orderService.listByUser(user.id());
+    }
+
     private AuthDtos.UserDto loadUser(Authentication auth) {
         if (auth == null || auth.getPrincipal() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);

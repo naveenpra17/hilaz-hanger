@@ -20,6 +20,7 @@ import { SiteFooterComponent } from '../../shared/components/site-footer/site-fo
             <a routerLink="/admin/dashboard" routerLinkActive="bg-gold text-burgundy-900" class="px-3 py-1.5 rounded-lg hover:bg-white/10">Dashboard</a>
             <a routerLink="/admin/products" routerLinkActive="bg-gold text-burgundy-900" class="px-3 py-1.5 rounded-lg hover:bg-white/10">Products</a>
             <a routerLink="/admin/orders" routerLinkActive="bg-gold text-burgundy-900" class="px-3 py-1.5 rounded-lg hover:bg-white/10">Orders</a>
+            <a routerLink="/admin/coupons" routerLinkActive="bg-gold text-burgundy-900" class="px-3 py-1.5 rounded-lg hover:bg-white/10">Coupons</a>
             <a routerLink="/" class="px-3 py-1.5 rounded-lg hover:bg-white/10">← Store</a>
           </nav>
         </div>
@@ -39,6 +40,7 @@ export class AdminLayoutComponent {
     if (path.includes('edit')) return 'Edit Product';
     if (path.includes('products')) return 'All Products';
     if (path.includes('orders')) return 'Orders';
+    if (path.includes('coupons')) return 'Coupons';
     return 'Admin';
   }
 }

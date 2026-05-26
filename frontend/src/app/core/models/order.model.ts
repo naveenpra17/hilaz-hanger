@@ -35,6 +35,7 @@ export interface Order {
   notes?: string;
   paid: boolean;
   delivered: boolean;
+  couponCode?: string;
   items: OrderItem[];
   createdAt: string;
 }
@@ -46,6 +47,7 @@ export interface CheckoutRequest {
   shippingPincode: string;
   shippingPrice: number;
   discount: number;
+  couponCode?: string;
   paymentMethod: string;
   notes?: string;
 }

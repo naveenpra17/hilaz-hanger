@@ -5,6 +5,7 @@ import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { AuthService } from '../../core/services/auth.service';
+import { CouponService } from '../../core/services/coupon.service';
 
 @Component({
   selector: 'app-checkout',
@@ -28,6 +29,19 @@ import { AuthService } from '../../core/services/auth.service';
         </section>
 
         <section class="mb-6">
+          <h2 class="font-serif font-bold mb-3">Promo code</h2>
+          <div class="flex gap-2">
+            <input class="input-field flex-1 uppercase" placeholder="e.g. WELCOME10" [(ngModel)]="couponCode" name="coupon" />
+            <button type="button" class="btn-secondary shrink-0 px-4" (click)="applyCoupon()" [disabled]="couponLoading()">
+              {{ couponLoading() ? '...' : 'Apply' }}
+            </button>
+          </div>
+          @if (couponMessage()) {
+            <p class="text-xs mt-2" [class.text-green-700]="couponDiscount() > 0" [class.text-red-600]="couponDiscount() === 0">{{ couponMessage() }}</p>
+          }
+        </section>
+
+        <section class="mb-6">
           <label class="block text-sm font-medium mb-2">Payment Method</label>
           <select class="input-field" [(ngModel)]="paymentMethod">
             <option value="UPI">UPI (Razorpay)</option>
@@ -39,8 +53,11 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="bg-pink-50 rounded-2xl p-4 space-y-2 text-sm mb-6">
           <div class="flex justify-between"><span>Items Total</span><span>₹{{ cart.subtotal() }}</span></div>
           <div class="flex justify-between"><span>Shipping</span><span>₹{{ shippingPrice }}</span></div>
+          @if (couponDiscount() > 0) {
+            <div class="flex justify-between text-green-700"><span>Discount</span><span>−₹{{ couponDiscount() }}</span></div>
+          }
           <div class="flex justify-between font-bold text-base border-t border-pink-200 pt-2">
-            <span>Total</span><span>₹{{ cart.subtotal() + shippingPrice }}</span>
+            <span>Total</span><span>₹{{ orderTotal() }}</span>
           </div>
         </div>
 
@@ -70,8 +87,14 @@ export class CheckoutComponent {
   private readonly paymentService = inject(PaymentService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly couponService = inject(CouponService);
 
   street = '';
+  couponCode = '';
+  readonly couponDiscount = signal(0);
+  readonly couponMessage = signal('');
+  readonly couponLoading = signal(false);
+  appliedCouponCode = '';
   city = 'Coimbatore';
   pincode = '';
   paymentMethod = 'UPI';
@@ -79,6 +102,34 @@ export class CheckoutComponent {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly success = signal('');
+
+  orderTotal(): number {
+    return Math.max(0, this.cart.subtotal() + this.shippingPrice - this.couponDiscount());
+  }
+
+  applyCoupon(): void {
+    const code = this.couponCode.trim();
+    if (!code) return;
+    this.couponLoading.set(true);
+    this.couponMessage.set('');
+    this.couponService.validate(code, this.cart.subtotal()).subscribe({
+      next: (res) => {
+        this.couponLoading.set(false);
+        this.couponMessage.set(res.message);
+        if (res.valid) {
+          this.couponDiscount.set(res.discountAmount);
+          this.appliedCouponCode = code.toUpperCase();
+        } else {
+          this.couponDiscount.set(0);
+          this.appliedCouponCode = '';
+        }
+      },
+      error: () => {
+        this.couponLoading.set(false);
+        this.couponMessage.set('Could not validate coupon.');
+      },
+    });
+  }
 
   placeOrder(): void {
     if (!this.street || !this.city || !this.pincode) {
@@ -94,7 +145,8 @@ export class CheckoutComponent {
       shippingCity: this.city,
       shippingPincode: this.pincode,
       shippingPrice: this.shippingPrice,
-      discount: 0,
+      discount: this.couponDiscount(),
+      couponCode: this.appliedCouponCode || undefined,
       paymentMethod: this.paymentMethod,
     };
 
@@ -159,6 +211,6 @@ export class CheckoutComponent {
     this.cart.clear();
     this.success.set(`Order ${orderNumber} placed successfully!`);
     this.loading.set(false);
-    setTimeout(() => this.router.navigate(['/']), 2500);
+    setTimeout(() => this.router.navigate(['/orders']), 2500);
   }
 }

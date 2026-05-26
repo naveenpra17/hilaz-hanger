@@ -156,13 +156,29 @@ Customer (Vercel)  ──HTTPS──►  Spring API (Render)  ──►  Postgre
 
 ---
 
-## What is not built yet (roadmap)
+## Coupons
 
-- Promo / coupon codes (table exists, no API)
-- Customer order history page
-- Email/SMS order confirmations
-- Razorpay webhooks (verification is client + API today)
-- Multi-image gallery in admin (single primary image supported)
-- Ship / cancel order buttons in admin UI
+- **Admin → Coupons** — create/edit/delete promo codes  
+- **Checkout** — customers enter code (try seeded `WELCOME10`, `SAVE100`)  
+- **API:** `POST /api/coupons/validate`, applied on checkout server-side  
 
-For day-to-day selling: **products, stock, sales pricing, Razorpay, COD, admin orders, and Cloudinary uploads are supported.**
+## My orders (customers)
+
+- **/orders** — logged-in customers see order history  
+
+## Email & SMS
+
+- Order confirmation after COD or Razorpay payment  
+- Status updates when admin ships/cancels/delivers  
+- **Render env (optional):**  
+  - `APP_MAIL_ENABLED=true`, `SPRING_MAIL_HOST`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, `APP_MAIL_FROM`  
+  - `APP_SMS_ENABLED=true`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_PHONE`  
+- Without config, messages are **logged** in API logs (preview mode).  
+
+## Admin order actions
+
+- **Mark shipped** / **Mark delivered** / **Cancel order** (restores stock on cancel)  
+
+## Multi-image products
+
+- **Admin product form** — upload or paste multiple URLs, set primary image  

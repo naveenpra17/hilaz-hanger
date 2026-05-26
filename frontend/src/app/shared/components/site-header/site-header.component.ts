@@ -75,7 +75,10 @@ import { Category } from '../../../core/models/category.model';
               }
             </a>
             @if (auth.isLoggedIn()) {
-              <a [routerLink]="auth.isAdmin() ? '/admin' : '/login'" class="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-gold text-burgundy-900 flex items-center justify-center text-sm font-bold shrink-0">
+              @if (!auth.isAdmin()) {
+                <a routerLink="/orders" class="hidden sm:inline text-xs hover:text-gold whitespace-nowrap">My Orders</a>
+              }
+              <a [routerLink]="auth.isAdmin() ? '/admin' : '/orders'" class="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-gold text-burgundy-900 flex items-center justify-center text-sm font-bold shrink-0" [attr.aria-label]="auth.isAdmin() ? 'Admin' : 'My orders'">
                 {{ auth.user()?.fullName?.charAt(0) ?? 'H' }}
               </a>
             } @else {
@@ -110,6 +113,9 @@ import { Category } from '../../../core/models/category.model';
                 >{{ cat.name }}</a>
               }
               <a routerLink="/saved" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Saved</a>
+              @if (auth.isLoggedIn() && !auth.isAdmin()) {
+                <a routerLink="/orders" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center" (click)="menuOpen.set(false)">My Orders</a>
+              }
               <a routerLink="/login" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Profile / Login</a>
               @if (auth.isAdmin()) {
                 <a routerLink="/admin" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center text-gold" (click)="menuOpen.set(false)">Admin Panel</a>

@@ -23,15 +23,21 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository variantRepository;
     private final RazorpayService razorpayService;
+    private final CouponService couponService;
+    private final NotificationService notificationService;
 
     public OrderService(
             OrderRepository orderRepository,
             ProductVariantRepository variantRepository,
-            RazorpayService razorpayService
+            RazorpayService razorpayService,
+            CouponService couponService,
+            NotificationService notificationService
     ) {
         this.orderRepository = orderRepository;
         this.variantRepository = variantRepository;
         this.razorpayService = razorpayService;
+        this.couponService = couponService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -55,7 +61,8 @@ public class OrderService {
         }
 
         order.setStatus(OrderStatus.CONFIRMED);
-        orderRepository.save(order);
+        order = orderRepository.save(order);
+        notificationService.sendOrderConfirmation(order);
         return new OrderDtos.CheckoutResponse(toDto(order), null, razorpayService.getKeyId(), 0L, false);
     }
 
@@ -68,7 +75,9 @@ public class OrderService {
         order.setPaymentStatus(PaymentStatus.PAID);
         order.setStatus(OrderStatus.CONFIRMED);
         order.setRazorpayPaymentId(req.razorpayPaymentId());
-        return toDto(orderRepository.save(order));
+        order = orderRepository.save(order);
+        notificationService.sendOrderConfirmation(order);
+        return toDto(order);
     }
 
     @Transactional
@@ -79,11 +88,19 @@ public class OrderService {
             order.setPaymentStatus(PaymentStatus.PAID);
             order.setStatus(OrderStatus.CONFIRMED);
         }
-        return toDto(orderRepository.save(order));
+        order = orderRepository.save(order);
+        if (order.getStatus() == OrderStatus.CONFIRMED) {
+            notificationService.sendOrderConfirmation(order);
+        }
+        return toDto(order);
     }
 
     public List<OrderDtos.OrderDto> listAll() {
         return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toDto).toList();
+    }
+
+    public List<OrderDtos.OrderDto> listByUser(UUID userId) {
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(this::toDto).toList();
     }
 
     public OrderDtos.DashboardStatsDto dashboard() {
@@ -134,7 +151,51 @@ public class OrderService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         order.setPaid(true);
         order.setPaymentStatus(PaymentStatus.PAID);
+        if (order.getStatus() == OrderStatus.PENDING) {
+            order.setStatus(OrderStatus.CONFIRMED);
+        }
         return toDto(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderDtos.OrderDto updateStatus(UUID orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            if (order.getStatus() == OrderStatus.DELIVERED) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot cancel a delivered order");
+            }
+            if (order.getStatus() != OrderStatus.CANCELLED) {
+                restoreStock(order);
+                order.setStatus(OrderStatus.CANCELLED);
+                order.setPaymentStatus(PaymentStatus.REFUNDED);
+            }
+        } else if (newStatus == OrderStatus.SHIPPED) {
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot ship a cancelled order");
+            }
+            order.setStatus(OrderStatus.SHIPPED);
+        } else if (newStatus == OrderStatus.DELIVERED) {
+            order.setStatus(OrderStatus.DELIVERED);
+            order.setDelivered(true);
+        } else if (newStatus == OrderStatus.CONFIRMED) {
+            order.setStatus(OrderStatus.CONFIRMED);
+        } else {
+            order.setStatus(newStatus);
+        }
+
+        order = orderRepository.save(order);
+        notificationService.sendOrderStatusUpdate(order);
+        return toDto(order);
+    }
+
+    private void restoreStock(Order order) {
+        for (OrderItem item : order.getItems()) {
+            if (item.getVariantId() == null) continue;
+            variantRepository.findById(item.getVariantId()).ifPresent(v ->
+                    v.setStockQuantity(v.getStockQuantity() + item.getQuantity()));
+        }
     }
 
     private Order buildOrder(UUID userId, String name, String email, String phone, OrderSource source,
@@ -169,7 +230,16 @@ public class OrderService {
         }
 
         BigDecimal shipping = req.shippingPrice() != null ? req.shippingPrice() : BigDecimal.ZERO;
-        BigDecimal discount = req.discount() != null ? req.discount() : BigDecimal.ZERO;
+        BigDecimal discount = BigDecimal.ZERO;
+        String couponCode = null;
+
+        if (req.couponCode() != null && !req.couponCode().isBlank()) {
+            couponCode = req.couponCode().trim().toUpperCase();
+            discount = couponService.applyAndConsume(couponCode, subtotal);
+        } else if (req.discount() != null && req.discount().compareTo(BigDecimal.ZERO) > 0) {
+            discount = req.discount().min(subtotal);
+        }
+
         BigDecimal total = subtotal.add(shipping).subtract(discount).max(BigDecimal.ZERO);
 
         Order order = Order.builder()
@@ -185,6 +255,7 @@ public class OrderService {
                 .subtotal(subtotal)
                 .shippingPrice(shipping)
                 .discount(discount)
+                .couponCode(couponCode)
                 .total(total)
                 .shippingStreet(req.shippingStreet())
                 .shippingCity(req.shippingCity())
@@ -204,7 +275,7 @@ public class OrderService {
     private OrderDtos.CheckoutRequest toCheckout(OrderDtos.OfflineOrderRequest req) {
         return new OrderDtos.CheckoutRequest(
                 req.items(), req.shippingStreet(), req.shippingCity(), req.shippingPincode(),
-                req.shippingPrice(), req.discount(), req.paymentMethod(), req.notes()
+                req.shippingPrice(), req.discount(), null, req.paymentMethod(), req.notes()
         );
     }
 
@@ -229,6 +300,7 @@ public class OrderService {
                 o.getNotes(),
                 o.isPaid(),
                 o.isDelivered(),
+                o.getCouponCode(),
                 o.getItems().stream().map(i -> new OrderDtos.OrderItemDto(
                         i.getId(), i.getProductName(), i.getSize(), i.getColorName(),
                         i.getUnitPrice(), i.getQuantity(), i.getLineTotal(), null

@@ -19,6 +19,17 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+  mail:
+    host: ${SPRING_MAIL_HOST:}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   port: 8080
@@ -38,3 +49,11 @@ app:
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:}
     key-secret: ${RAZORPAY_KEY_SECRET:}
+  mail:
+    enabled: ${APP_MAIL_ENABLED:false}
+    from: ${APP_MAIL_FROM:noreply@hilazhanger.com}
+  sms:
+    enabled: ${APP_SMS_ENABLED:false}
+    twilio-account-sid: ${TWILIO_ACCOUNT_SID:}
+    twilio-auth-token: ${TWILIO_AUTH_TOKEN:}
+    twilio-from: ${TWILIO_FROM_PHONE:}

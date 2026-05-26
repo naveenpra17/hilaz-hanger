@@ -34,6 +34,18 @@ import { Product } from '../../../core/models/product.model';
               }
             </div>
           </div>
+          <p class="text-xs text-gray-500 mt-2">Status: <strong>{{ o.status }}</strong></p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            @if (o.status !== 'SHIPPED' && o.status !== 'DELIVERED' && o.status !== 'CANCELLED') {
+              <button type="button" class="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg" (click)="setStatus(o.id, 'SHIPPED')">Mark shipped</button>
+            }
+            @if (o.status === 'SHIPPED') {
+              <button type="button" class="text-xs bg-green-100 text-green-800 px-3 py-1.5 rounded-lg" (click)="setStatus(o.id, 'DELIVERED')">Mark delivered</button>
+            }
+            @if (o.status !== 'CANCELLED' && o.status !== 'DELIVERED') {
+              <button type="button" class="text-xs bg-red-100 text-red-800 px-3 py-1.5 rounded-lg" (click)="setStatus(o.id, 'CANCELLED')">Cancel order</button>
+            }
+          </div>
         </article>
       }
     </div>
@@ -193,6 +205,17 @@ export class OrdersComponent implements OnInit {
       next: (updated) => {
         this.orders.update((list) => list.map((o) => (o.id === updated.id ? updated : o)));
       },
+    });
+  }
+
+  setStatus(orderId: string, status: Order['status']): void {
+    const label = status === 'CANCELLED' ? 'cancel' : status.toLowerCase();
+    if (!confirm(`Mark this order as ${label}?`)) return;
+    this.orderService.updateStatus(orderId, status).subscribe({
+      next: (updated) => {
+        this.orders.update((list) => list.map((o) => (o.id === updated.id ? updated : o)));
+      },
+      error: (err) => alert(err?.error?.message ?? 'Status update failed'),
     });
   }
 

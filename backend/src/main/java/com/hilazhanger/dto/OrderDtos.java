@@ -47,6 +47,7 @@ public final class OrderDtos {
             String notes,
             boolean paid,
             boolean delivered,
+            String couponCode,
             List<OrderItemDto> items,
             Instant createdAt
     ) {}
@@ -63,8 +64,13 @@ public final class OrderDtos {
             @NotBlank String shippingPincode,
             BigDecimal shippingPrice,
             BigDecimal discount,
+            String couponCode,
             @NotBlank String paymentMethod,
             String notes
+    ) {}
+
+    public record UpdateOrderStatusRequest(
+            @NotNull OrderStatus status
     ) {}
 
     public record CheckoutResponse(

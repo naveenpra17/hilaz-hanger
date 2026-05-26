@@ -111,6 +111,7 @@ CREATE TABLE orders (
     subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
     shipping_price DECIMAL(10,2) NOT NULL DEFAULT 0,
     discount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    coupon_code VARCHAR(50),
     total DECIMAL(10,2) NOT NULL DEFAULT 0,
     shipping_street VARCHAR(300) NOT NULL,
     shipping_city VARCHAR(100) NOT NULL,
