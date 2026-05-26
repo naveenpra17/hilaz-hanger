@@ -37,7 +37,7 @@ import { ProductPage } from '../../../core/models/product.model';
 
     <div class="space-y-4">
       @for (p of page()?.content ?? []; track p.id) {
-        <app-admin-product-row [product]="p" />
+        <app-admin-product-row [product]="p" (deleteClick)="onDelete($event)" />
       }
     </div>
 
@@ -99,5 +99,13 @@ export class ProductsListComponent {
   pageNumbers(pg: ProductPage): number[] {
     const total = Math.min(pg.totalPages, 10);
     return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  onDelete(id: string): void {
+    if (!confirm('Delete this product permanently?')) return;
+    this.productService.delete(id).subscribe({
+      next: () => this.load(),
+      error: () => alert('Delete failed. Log in as admin and ensure API is deployed.'),
+    });
   }
 }

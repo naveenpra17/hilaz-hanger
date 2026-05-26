@@ -2,6 +2,7 @@ package com.hilazhanger.service;
 
 import com.hilazhanger.domain.entity.Product;
 import com.hilazhanger.domain.entity.ProductImage;
+import com.hilazhanger.domain.entity.ProductVariant;
 import com.hilazhanger.dto.ProductDtos;
 import com.hilazhanger.repository.ProductRepository;
 import org.springframework.data.domain.Page;
@@ -98,6 +99,7 @@ public class ProductService {
                 product.getImages().add(pi);
             }
         }
+        applyVariants(product, req.variants(), req.sizes(), req.defaultStockPerSize());
         return toDto(productRepository.save(product));
     }
 
@@ -130,7 +132,48 @@ public class ProductService {
                         .build());
             }
         }
+        if (req.variants() != null || (req.sizes() != null && !req.sizes().isEmpty())) {
+            applyVariants(product, req.variants(), req.sizes(), req.defaultStockPerSize());
+        }
         return toDto(productRepository.save(product));
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        productRepository.delete(product);
+    }
+
+    private void applyVariants(Product product, List<ProductDtos.VariantInput> variants,
+                               List<String> sizes, Integer defaultStockPerSize) {
+        product.getVariants().clear();
+        int defaultStock = defaultStockPerSize != null && defaultStockPerSize > 0 ? defaultStockPerSize : 10;
+        if (variants != null && !variants.isEmpty()) {
+            for (ProductDtos.VariantInput v : variants) {
+                if (v.size() == null || v.size().isBlank()) continue;
+                product.getVariants().add(ProductVariant.builder()
+                        .product(product)
+                        .colorName(v.colorName() != null && !v.colorName().isBlank() ? v.colorName() : "Default")
+                        .colorHex(v.colorHex() != null && !v.colorHex().isBlank() ? v.colorHex() : "#8B2942")
+                        .size(v.size().trim())
+                        .stockQuantity(Math.max(0, v.stockQuantity()))
+                        .build());
+            }
+            return;
+        }
+        if (sizes != null) {
+            for (String size : sizes) {
+                if (size == null || size.isBlank()) continue;
+                product.getVariants().add(ProductVariant.builder()
+                        .product(product)
+                        .colorName("Default")
+                        .colorHex("#8B2942")
+                        .size(size.trim())
+                        .stockQuantity(defaultStock)
+                        .build());
+            }
+        }
     }
 
     private ProductDtos.ProductDto toDto(Product p) {

@@ -1,8 +1,9 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
+import { ProductService } from '../../../core/services/product.service';
 import { Order, OrderSource } from '../../../core/models/order.model';
-import { MOCK_PRODUCTS } from '../../../core/data/mock-products';
+import { Product } from '../../../core/models/product.model';
 
 @Component({
   selector: 'app-orders',
@@ -23,11 +24,14 @@ import { MOCK_PRODUCTS } from '../../../core/data/mock-products';
               <p class="font-semibold">{{ o.customerName }}</p>
               <p class="text-xs text-gray-500">{{ o.customerPhone }} · {{ o.orderSource }}</p>
             </div>
-            <div class="text-right">
+            <div class="text-right flex flex-col items-end gap-2">
               <p class="font-bold">₹{{ o.total }}</p>
               <span class="text-xs px-2 py-0.5 rounded-full" [class.bg-green-100]="o.paid" [class.text-green-800]="o.paid" [class.bg-orange-100]="!o.paid" [class.text-orange-800]="!o.paid">
                 {{ o.paid ? 'Paid' : 'Unpaid' }}
               </span>
+              @if (!o.paid) {
+                <button type="button" class="text-xs text-burgundy-700 underline" (click)="markPaid(o.id)">Mark paid</button>
+              }
             </div>
           </div>
         </article>
@@ -65,17 +69,17 @@ import { MOCK_PRODUCTS } from '../../../core/data/mock-products';
             <section>
               <h4 class="font-serif font-bold text-sm mb-2">Order Items</h4>
               <input class="input-field mb-3" placeholder="Search products by name or brand..." [(ngModel)]="itemSearch" name="search" />
-              @for (item of lineItems; track item.productId) {
+              @for (item of lineItems; track item.variantId) {
                 <div class="flex gap-3 p-3 border border-pink-100 rounded-xl mb-2">
                   <img [src]="item.image" class="w-14 h-14 rounded object-cover" alt="" />
                   <div class="flex-1 text-sm">
                     <p class="font-semibold">{{ item.name }}</p>
                     <p class="text-gray-500">₹{{ item.price }} each</p>
                   </div>
-                  <input type="number" class="w-12 input-field text-center p-1" [(ngModel)]="item.qty" [name]="'q'+item.productId" min="1" />
+                  <input type="number" class="w-12 input-field text-center p-1" [(ngModel)]="item.qty" [name]="'q'+item.variantId" min="1" />
                 </div>
               }
-              <button type="button" class="text-xs text-burgundy-600" (click)="addSampleItem()">+ Add sample item</button>
+              <button type="button" class="text-xs text-burgundy-600" (click)="addFromCatalog()">+ Add first catalog product</button>
             </section>
 
             <section>
@@ -151,26 +155,45 @@ export class OrdersComponent implements OnInit {
     notes: '',
   };
 
-  lineItems: { productId: string; name: string; price: number; image: string; qty: number }[] = [];
+  lineItems: { variantId: string; name: string; price: number; image: string; qty: number }[] = [];
+  private catalog: Product[] = [];
 
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private productService: ProductService
+  ) {}
 
   ngOnInit(): void {
     this.orderService.getOrders().subscribe((o) => this.orders.set(o));
-    this.addSampleItem();
+    this.productService.getProducts({ size: 20 }).subscribe((page) => {
+      this.catalog = page.content;
+    });
   }
 
-  addSampleItem(): void {
-    const p = MOCK_PRODUCTS[6];
-    if (!this.lineItems.find((i) => i.productId === p.id)) {
+  addFromCatalog(): void {
+    const p = this.catalog[0];
+    const v = p?.variants?.[0];
+    if (!p || !v?.id) {
+      alert('No products with stock variants in catalog. Create a product in Admin → Products first.');
+      return;
+    }
+    if (!this.lineItems.find((i) => i.variantId === v.id)) {
       this.lineItems.push({
-        productId: p.id,
-        name: p.name,
+        variantId: v.id,
+        name: `${p.name} (${v.size})`,
         price: p.price,
         image: p.images[0]?.url ?? '',
         qty: 1,
       });
     }
+  }
+
+  markPaid(orderId: string): void {
+    this.orderService.markPaid(orderId).subscribe({
+      next: (updated) => {
+        this.orders.update((list) => list.map((o) => (o.id === updated.id ? updated : o)));
+      },
+    });
   }
 
   itemsTotal(): number {
@@ -181,7 +204,7 @@ export class OrdersComponent implements OnInit {
     this.orderService
       .createOfflineOrder({
         ...this.form,
-        items: this.lineItems.map((i) => ({ variantId: i.productId, quantity: i.qty })),
+        items: this.lineItems.map((i) => ({ variantId: i.variantId, quantity: i.qty })),
       })
       .subscribe((order) => {
         this.orders.update((list) => [order, ...list]);

@@ -169,9 +169,13 @@ export class ProductDetailComponent {
   addToCart(p: Product): void {
     const variant = p.variants?.find(
       (v) => v.size === this.selectedSize() && (!this.selectedColor() || v.colorName === this.selectedColor()?.name)
-    ) ?? p.variants?.[0];
+    ) ?? p.variants?.find((v) => v.size === this.selectedSize()) ?? p.variants?.[0];
+    if (!variant?.id) {
+      alert('This product has no stock variants. Ask admin to re-save it with sizes and stock.');
+      return;
+    }
     this.cart.addItem({
-      variantId: variant?.id ?? p.id,
+      variantId: variant.id,
       productId: p.id,
       productName: p.name,
       productSlug: p.slug,

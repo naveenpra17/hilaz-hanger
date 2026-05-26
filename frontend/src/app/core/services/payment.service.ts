@@ -87,7 +87,9 @@ export class PaymentService {
   }
 
   isConfigured(keyId?: string): boolean {
-    const key = keyId || environment.razorpayKey;
-    return !!key && !key.includes('YOUR');
+    const key = (keyId || environment.razorpayKey || '').trim();
+    if (!key || key.length < 12) return false;
+    if (key.includes('YOUR') || key.includes('...') || key.endsWith('_...')) return false;
+    return key.startsWith('rzp_');
   }
 }

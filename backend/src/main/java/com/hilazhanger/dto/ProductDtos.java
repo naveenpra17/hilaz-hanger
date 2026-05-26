@@ -16,6 +16,9 @@ public final class ProductDtos {
 
     public record ProductVariantDto(UUID id, String colorName, String colorHex, String size, int stockQuantity) {}
 
+    /** Admin payload for inventory (size + stock). */
+    public record VariantInput(String colorName, String colorHex, String size, int stockQuantity) {}
+
     public record ProductDto(
             UUID id,
             String name,
@@ -57,7 +60,9 @@ public final class ProductDtos {
             boolean expressShipping,
             List<String> labels,
             List<String> sizes,
-            List<ProductImageDto> images
+            List<ProductImageDto> images,
+            List<VariantInput> variants,
+            Integer defaultStockPerSize
     ) {}
 
     public record UpdateProductRequest(
@@ -73,6 +78,8 @@ public final class ProductDtos {
             boolean expressShipping,
             List<String> labels,
             List<String> sizes,
-            List<ProductImageDto> images
+            List<ProductImageDto> images,
+            List<VariantInput> variants,
+            Integer defaultStockPerSize
     ) {}
 }

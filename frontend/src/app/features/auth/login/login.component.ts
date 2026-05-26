@@ -30,11 +30,10 @@ import { AuthService } from '../../../core/services/auth.service';
         No account? <a routerLink="/register" class="text-burgundy-700 font-medium">Register</a>
       </p>
 
-      <div class="mt-8 p-4 bg-cream-dark rounded-xl text-xs text-gray-600">
-        <p class="font-semibold mb-1">Demo (when API connected):</p>
-        <p>Admin: admin&#64;hilazhanger.com / Admin&#64;123</p>
-        <p>Customer: customer&#64;hilazhanger.com / Customer&#64;123</p>
-        <button type="button" class="mt-3 text-burgundy-700 underline" (click)="demoAdmin()">Enter as Admin (offline)</button>
+      <div class="mt-8 p-4 bg-cream-dark rounded-xl text-xs text-gray-600 space-y-2">
+        <p class="font-semibold">Store admin login</p>
+        <p>admin&#64;hilazhanger.com / Admin&#64;123</p>
+        <button type="button" class="text-burgundy-700 underline" (click)="fillAdmin()">Fill admin credentials</button>
       </div>
     </div>
   `,
@@ -59,14 +58,14 @@ export class LoginComponent {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Login failed. Use demo admin or start the backend.');
+        this.error.set('Login failed. Check email/password and that the API is running.');
         this.loading.set(false);
       },
     });
   }
 
-  demoAdmin(): void {
-    this.auth.setDemoAdmin();
-    this.router.navigate(['/admin/dashboard']);
+  fillAdmin(): void {
+    this.email = 'admin@hilazhanger.com';
+    this.password = 'Admin@123';
   }
 }

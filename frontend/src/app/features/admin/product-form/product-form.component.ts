@@ -40,13 +40,26 @@ const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
         <input class="input-field" placeholder="Product name" [(ngModel)]="name" name="name" required />
         <textarea class="input-field" rows="3" placeholder="Description" [(ngModel)]="description" name="desc"></textarea>
         <div class="grid grid-cols-2 gap-3">
-          <input class="input-field" type="number" placeholder="Price ₹" [(ngModel)]="price" name="price" />
-          <input class="input-field" type="number" placeholder="Compare price" [(ngModel)]="compareAtPrice" name="compare" />
+          <div>
+            <label class="text-xs text-gray-500">Selling price ₹</label>
+            <input class="input-field" type="number" [(ngModel)]="price" name="price" required />
+          </div>
+          <div>
+            <label class="text-xs text-gray-500">Original price ₹ (sale / strikethrough)</label>
+            <input class="input-field" type="number" [(ngModel)]="compareAtPrice" name="compare" placeholder="Optional" />
+          </div>
         </div>
+        @if (compareAtPrice && compareAtPrice > price) {
+          <p class="text-xs text-green-700">
+            Sale: {{ salePercent() }}% off — customers see ₹{{ compareAtPrice }} crossed out
+          </p>
+        }
       </div>
 
       <div class="section-card space-y-3">
-        <h3 class="font-semibold text-burgundy-800 border-b pb-2">Product Sizes</h3>
+        <h3 class="font-semibold text-burgundy-800 border-b pb-2">Sizes &amp; stock</h3>
+        <label class="text-xs text-gray-600">Default stock per size (for checkout)</label>
+        <input class="input-field w-32" type="number" min="0" [(ngModel)]="defaultStockPerSize" name="stock" />
         <div class="flex flex-wrap gap-2">
           @for (s of selectedSizes; track s) {
             <span class="chip bg-burgundy-400 text-white border-burgundy-400">
@@ -112,10 +125,11 @@ const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
   `,
 })
 export class ProductFormComponent implements OnInit {
-  name = 'High-Waist Denim Slit Skirt';
+  name = '';
   description = '';
-  price = 499;
-  compareAtPrice?: number = 799;
+  price = 999;
+  compareAtPrice?: number;
+  defaultStockPerSize = 10;
   active = true;
   expressShipping = false;
   selectedSizes: string[] = ['S', 'M', 'L', 'XL'];
@@ -173,9 +187,18 @@ export class ProductFormComponent implements OnInit {
     this.description = p.description ?? '';
     this.price = p.price;
     this.compareAtPrice = p.compareAtPrice;
-    this.selectedSizes = [...p.sizes];
-    this.labels = [...p.labels];
+    this.selectedSizes = p.sizes?.length ? [...p.sizes] : [...new Set((p.variants ?? []).map((v) => v.size))];
+    this.labels = [...(p.labels ?? [])];
     this.previewImage = p.images[0]?.url ?? this.previewImage;
+    const stocks = (p.variants ?? []).map((v) => v.stockQuantity);
+    if (stocks.length) {
+      this.defaultStockPerSize = Math.round(stocks.reduce((a, b) => a + b, 0) / stocks.length);
+    }
+  }
+
+  salePercent(): number {
+    if (!this.compareAtPrice || this.compareAtPrice <= this.price) return 0;
+    return Math.round(((this.compareAtPrice - this.price) / this.compareAtPrice) * 100);
   }
 
   toggleSize(s: string): void {
@@ -207,18 +230,30 @@ export class ProductFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (!this.name.trim() || this.selectedSizes.length === 0) {
+      this.toast.set('Name and at least one size are required.');
+      return;
+    }
+    const variants = this.selectedSizes.map((size) => ({
+      colorName: 'Default',
+      colorHex: '#8B2942',
+      size,
+      stockQuantity: this.defaultStockPerSize,
+    }));
     const payload: Record<string, unknown> = {
-      name: this.name,
+      name: this.name.trim(),
       description: this.description,
       fabric: '',
       colorInfo: '',
       price: this.price,
-      compareAtPrice: this.compareAtPrice,
+      compareAtPrice: this.compareAtPrice && this.compareAtPrice > this.price ? this.compareAtPrice : null,
       sizes: this.selectedSizes,
       labels: this.labels,
       active: this.active,
       expressShipping: this.expressShipping,
-      slug: this.name.toLowerCase().replace(/\s+/g, '-'),
+      slug: this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      defaultStockPerSize: this.defaultStockPerSize,
+      variants,
       images: [
         {
           url: this.previewImage,

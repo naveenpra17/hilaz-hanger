@@ -24,8 +24,15 @@ import { Product } from '../../../core/models/product.model';
         }
         <div class="flex flex-wrap items-center gap-2 mt-auto pt-3">
           <a [routerLink]="['/admin/products', product().id, 'edit']" class="bg-burgundy-400 hover:bg-burgundy-500 text-white text-xs font-medium px-3 py-2 rounded-lg inline-flex items-center gap-1">
-            Edit Product →
+            Edit →
           </a>
+          <button
+            type="button"
+            class="text-xs text-red-700 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-50"
+            (click)="deleteClick.emit(product().id)"
+          >
+            Delete
+          </button>
           @if (stockBadge(); as badge) {
             <span [class]="badge.class">{{ badge.text }}</span>
           }
@@ -36,6 +43,7 @@ import { Product } from '../../../core/models/product.model';
 })
 export class AdminProductRowComponent {
   readonly product = input.required<Product>();
+  readonly deleteClick = output<string>();
 
   image(): string {
     const p = this.product();

@@ -45,4 +45,9 @@ public class ProductController {
     public ProductDtos.ProductDto update(@PathVariable UUID id, @Valid @RequestBody ProductDtos.UpdateProductRequest request) {
         return productService.update(id, request);
     }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable UUID id) {
+        productService.delete(id);
+    }
 }
