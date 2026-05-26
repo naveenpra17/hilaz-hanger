@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -111,7 +112,7 @@ public class InvoiceService {
             doc.add(new Paragraph("This is a computer-generated invoice.", small));
             doc.close();
             return out.toByteArray();
-        } catch (DocumentException e) {
+        } catch (DocumentException | IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to generate invoice");
         }
     }
@@ -122,7 +123,7 @@ public class InvoiceService {
 
     private void addHeader(PdfPTable table, String text) {
         PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9)));
-        cell.setBackgroundColor(new java.awt.Color(240, 230, 235));
+        cell.setGrayFill(0.92f);
         cell.setPadding(4);
         table.addCell(cell);
     }
