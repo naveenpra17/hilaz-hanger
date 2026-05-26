@@ -10,10 +10,26 @@ import { Product } from '../../../core/models/product.model';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
       <h2 class="font-serif text-xl font-bold">Orders</h2>
-      <button type="button" class="btn-gold text-sm" (click)="showModal.set(true)">+ Add Offline Order</button>
+      <div class="flex gap-2">
+        <button type="button" class="btn-secondary text-sm" (click)="loadOrders()">Refresh</button>
+        <button type="button" class="btn-gold text-sm" (click)="showModal.set(true)">+ Add Offline Order</button>
+      </div>
     </div>
+
+    @if (loadError()) {
+      <div class="section-card bg-red-50 border-red-200 text-red-800 text-sm mb-4">
+        {{ loadError() }}
+        <button type="button" class="underline ml-2" (click)="loadOrders()">Retry</button>
+      </div>
+    }
+
+    @if (loading()) {
+      <p class="text-gray-500 text-sm">Loading orders…</p>
+    } @else if (!loadError() && orders().length === 0) {
+      <p class="text-gray-500 text-sm">No orders yet. Website COD/checkouts will appear here after deploy.</p>
+    }
 
     <div class="space-y-4">
       @for (o of orders(); track o.id) {
@@ -147,6 +163,8 @@ import { Product } from '../../../core/models/product.model';
 })
 export class OrdersComponent implements OnInit {
   readonly orders = signal<Order[]>([]);
+  readonly loading = signal(true);
+  readonly loadError = signal('');
   readonly showModal = signal(false);
   readonly sources: OrderSource[] = ['WHATSAPP', 'PHONE', 'FRIEND', 'INSTAGRAM', 'WALKIN', 'OTHER'];
   itemSearch = '';
@@ -176,9 +194,25 @@ export class OrdersComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.orderService.getOrders().subscribe((o) => this.orders.set(o));
+    this.loadOrders();
     this.productService.getProducts({ size: 20 }).subscribe((page) => {
       this.catalog = page.content;
+    });
+  }
+
+  loadOrders(): void {
+    this.loading.set(true);
+    this.loadError.set('');
+    this.orderService.getOrders().subscribe({
+      next: (o) => {
+        this.orders.set(o);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        const msg = err?.error?.message ?? 'Could not load orders. Log in again as admin, then refresh.';
+        this.loadError.set(msg);
+      },
     });
   }
 

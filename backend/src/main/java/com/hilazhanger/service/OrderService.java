@@ -61,6 +61,7 @@ public class OrderService {
         return finalizeCheckout(order, req.paymentMethod());
     }
 
+    @Transactional(readOnly = true)
     public OrderDtos.OrderDto getOrder(UUID userId, UUID orderId, boolean admin) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -92,7 +93,9 @@ public class OrderService {
                     true
             );
         }
+        // COD: order is confirmed; payment collected on delivery
         order.setStatus(OrderStatus.CONFIRMED);
+        order.setPaymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "COD");
         order = orderRepository.save(order);
         notificationService.sendOrderConfirmation(order);
         return new OrderDtos.CheckoutResponse(toDto(order), null, razorpayService.getKeyId(), 0L, false);
@@ -157,14 +160,17 @@ public class OrderService {
         return toDto(order);
     }
 
+    @Transactional(readOnly = true)
     public List<OrderDtos.OrderDto> listAll() {
         return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toDto).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<OrderDtos.OrderDto> listByUser(UUID userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(this::toDto).toList();
     }
 
+    @Transactional(readOnly = true)
     public OrderDtos.DashboardStatsDto dashboard() {
         List<Order> all = orderRepository.findAll();
         long total = all.size();
