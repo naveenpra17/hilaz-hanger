@@ -1,14 +1,19 @@
 import { Component, signal, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { Product, ProductColor } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
+import { ReviewService, Review } from '../../core/services/review.service';
+import { WishlistService } from '../../core/services/wishlist.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule, ProductCardComponent],
   template: `
     @if (product(); as p) {
       <div class="page-container page-section max-w-6xl">
@@ -114,11 +119,45 @@ import { CartService } from '../../core/services/cart.service';
           <div class="flex items-center gap-2 text-gray-600"><span>✓</span> Quality Guaranteed</div>
         </div>
 
-        <div class="flex border-b border-burgundy-100 mt-8 text-xs sm:text-sm overflow-x-auto">
-          <button type="button" class="px-3 sm:px-4 py-2 border-b-2 border-burgundy-800 font-medium whitespace-nowrap shrink-0">You May Like</button>
-          <button type="button" class="px-3 sm:px-4 py-2 text-gray-500 whitespace-nowrap shrink-0">Reviews</button>
-          <button type="button" class="px-3 sm:px-4 py-2 text-gray-500 whitespace-nowrap shrink-0">Write Review</button>
+        <div class="flex gap-2 mt-6">
+          <button type="button" class="btn-secondary text-sm" (click)="toggleWishlist(p)">♡ Save</button>
         </div>
+
+        <div class="flex border-b border-burgundy-100 mt-8 text-xs sm:text-sm overflow-x-auto">
+          <button type="button" class="px-3 sm:px-4 py-2 whitespace-nowrap shrink-0" [class.border-b-2]="tab()==='related'" [class.border-burgundy-800]="tab()==='related'" (click)="tab.set('related')">You May Like</button>
+          <button type="button" class="px-3 sm:px-4 py-2 whitespace-nowrap shrink-0" [class.border-b-2]="tab()==='reviews'" [class.border-burgundy-800]="tab()==='reviews'" (click)="tab.set('reviews'); loadReviews(p.id)">Reviews</button>
+          <button type="button" class="px-3 sm:px-4 py-2 whitespace-nowrap shrink-0" [class.border-b-2]="tab()==='write'" [class.border-burgundy-800]="tab()==='write'" (click)="tab.set('write')">Write Review</button>
+        </div>
+        @if (tab() === 'related' && related().length) {
+          <div class="responsive-grid-products mt-4">
+            @for (rp of related(); track rp.id) {
+              <app-product-card [product]="rp" />
+            }
+          </div>
+        }
+        @if (tab() === 'reviews') {
+          <div class="mt-4 space-y-3">
+            @for (r of reviews(); track r.id) {
+              <div class="section-card text-sm">
+                <p class="font-semibold">{{ r.authorName }} · {{ '★'.repeat(r.rating) }}</p>
+                @if (r.title) { <p class="font-medium">{{ r.title }}</p> }
+                <p class="text-gray-600">{{ r.body }}</p>
+              </div>
+            }
+            @if (reviews().length === 0) { <p class="text-gray-500 text-sm">No reviews yet.</p> }
+          </div>
+        }
+        @if (tab() === 'write') {
+          <form class="section-card mt-4 space-y-3" (ngSubmit)="submitReview(p.id)">
+            <label class="text-sm">Rating</label>
+            <select class="input-field" [(ngModel)]="reviewRating" name="rating">
+              @for (n of [5,4,3,2,1]; track n) { <option [value]="n">{{ n }} stars</option> }
+            </select>
+            <input class="input-field" placeholder="Title" [(ngModel)]="reviewTitle" name="title" />
+            <textarea class="input-field" rows="3" placeholder="Your review" [(ngModel)]="reviewBody" name="body"></textarea>
+            <button type="submit" class="btn-primary">Submit review</button>
+          </form>
+        }
         </div>
         </div>
       </div>
@@ -129,8 +168,17 @@ export class ProductDetailComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cart = inject(CartService);
+  private reviewService = inject(ReviewService);
+  private wishlistService = inject(WishlistService);
+  readonly auth = inject(AuthService);
 
   readonly product = signal<Product | null>(null);
+  readonly related = signal<Product[]>([]);
+  readonly reviews = signal<Review[]>([]);
+  readonly tab = signal<'related' | 'reviews' | 'write'>('related');
+  reviewRating = 5;
+  reviewTitle = '';
+  reviewBody = '';
   readonly imageIndex = signal(0);
   readonly selectedSize = signal<string | null>(null);
   readonly selectedColor = signal<ProductColor | null>(null);
@@ -143,7 +191,37 @@ export class ProductDetailComponent {
         this.product.set(p);
         this.selectedSize.set(p.sizes[0] ?? null);
         this.selectedColor.set(p.colors[0] ?? null);
+        this.productService.getRelated(p.id).subscribe((list) => this.related.set(list));
       });
+  }
+
+  loadReviews(productId: string): void {
+    this.reviewService.list(productId).subscribe((list) => this.reviews.set(list));
+  }
+
+  submitReview(productId: string): void {
+    if (!this.auth.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.reviewService
+      .create(productId, { rating: this.reviewRating, title: this.reviewTitle, body: this.reviewBody })
+      .subscribe({
+        next: () => {
+          this.tab.set('reviews');
+          this.loadReviews(productId);
+          this.reviewTitle = '';
+          this.reviewBody = '';
+        },
+      });
+  }
+
+  toggleWishlist(p: Product): void {
+    if (!this.auth.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.wishlistService.add(p.id).subscribe(() => alert('Saved to wishlist'));
   }
 
   currentImage(): string {

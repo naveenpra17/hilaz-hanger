@@ -25,19 +25,43 @@ public class OrderService {
     private final RazorpayService razorpayService;
     private final CouponService couponService;
     private final NotificationService notificationService;
+    private final ShippingService shippingService;
 
     public OrderService(
             OrderRepository orderRepository,
             ProductVariantRepository variantRepository,
             RazorpayService razorpayService,
             CouponService couponService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            ShippingService shippingService
     ) {
         this.orderRepository = orderRepository;
         this.variantRepository = variantRepository;
         this.razorpayService = razorpayService;
         this.couponService = couponService;
         this.notificationService = notificationService;
+        this.shippingService = shippingService;
+    }
+
+    @Transactional
+    public OrderDtos.CheckoutResponse guestCheckout(OrderDtos.GuestCheckoutRequest req) {
+        OrderDtos.CheckoutRequest checkout = new OrderDtos.CheckoutRequest(
+                req.items(), req.shippingStreet(), req.shippingCity(), req.shippingPincode(),
+                req.shippingPrice(), req.discount(), req.couponCode(), req.paymentMethod(), req.notes()
+        );
+        Order order = buildOrder(null, req.customerName(), req.customerEmail(), req.customerPhone(),
+                OrderSource.WEBSITE, checkout, false, false);
+        order = orderRepository.save(order);
+        return finalizeCheckout(order, req.paymentMethod());
+    }
+
+    public OrderDtos.OrderDto getOrder(UUID userId, UUID orderId, boolean admin) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!admin && (order.getUserId() == null || !order.getUserId().equals(userId))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return toDto(order);
     }
 
     @Transactional
@@ -45,8 +69,11 @@ public class OrderService {
                                                String customerPhone, OrderDtos.CheckoutRequest req) {
         Order order = buildOrder(userId, customerName, customerEmail, customerPhone, OrderSource.WEBSITE, req, false, false);
         order = orderRepository.save(order);
+        return finalizeCheckout(order, req.paymentMethod());
+    }
 
-        boolean requiresPayment = !"COD".equalsIgnoreCase(req.paymentMethod());
+    private OrderDtos.CheckoutResponse finalizeCheckout(Order order, String paymentMethod) {
+        boolean requiresPayment = !"COD".equalsIgnoreCase(paymentMethod);
         if (requiresPayment) {
             RazorpayService.RazorpayOrderResult rz = razorpayService.createOrder(order.getOrderNumber(), order.getTotal());
             order.setRazorpayOrderId(rz.razorpayOrderId());
@@ -59,7 +86,6 @@ public class OrderService {
                     true
             );
         }
-
         order.setStatus(OrderStatus.CONFIRMED);
         order = orderRepository.save(order);
         notificationService.sendOrderConfirmation(order);
@@ -229,7 +255,9 @@ public class OrderService {
             items.add(item);
         }
 
-        BigDecimal shipping = req.shippingPrice() != null ? req.shippingPrice() : BigDecimal.ZERO;
+        BigDecimal shipping = req.shippingPrice() != null && req.shippingPrice().compareTo(BigDecimal.ZERO) > 0
+                ? req.shippingPrice()
+                : shippingService.calculate(subtotal);
         BigDecimal discount = BigDecimal.ZERO;
         String couponCode = null;
 

@@ -20,10 +20,20 @@ public class ProductController {
     @GetMapping
     public ProductDtos.ProductPageDto list(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return productService.list(search, page, size);
+        return productService.list(search, category, filter, page, size);
+    }
+
+    @GetMapping("/{id}/related")
+    public java.util.List<ProductDtos.ProductDto> related(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "4") int limit
+    ) {
+        return productService.related(id, limit);
     }
 
     @GetMapping("/slug/{slug}")

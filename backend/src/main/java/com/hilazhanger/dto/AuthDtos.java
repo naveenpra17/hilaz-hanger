@@ -25,4 +25,14 @@ public final class AuthDtos {
     public record UserDto(UUID id, String email, String fullName, String phone, UserRole role) {}
 
     public record AuthResponse(String token, UserDto user) {}
+
+    public record UpdateProfileRequest(
+            @NotBlank String fullName,
+            String phone
+    ) {}
+
+    public record ChangePasswordRequest(
+            @NotBlank String currentPassword,
+            @NotBlank @Size(min = 6) String newPassword
+    ) {}
 }

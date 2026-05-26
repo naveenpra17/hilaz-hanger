@@ -37,6 +37,12 @@ export class ProductService {
     );
   }
 
+  getRelated(productId: string, limit = 4): Observable<Product[]> {
+    return this.http
+      .get<Product[]>(`${this.api}/${productId}/related`, { params: { limit: String(limit) } })
+      .pipe(map((list) => list.map((p) => this.normalize(p))));
+  }
+
   getBySlug(slug: string): Observable<Product> {
     if (this.useMock) {
       const p = MOCK_PRODUCTS.find((x) => x.slug === slug) ?? MOCK_PRODUCTS[0];

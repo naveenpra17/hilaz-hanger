@@ -41,8 +41,13 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Protected routes first
+                .requestMatchers(HttpMethod.POST, "/orders/guest-checkout").permitAll()
+                .requestMatchers(HttpMethod.POST, "/contact", "/newsletter/subscribe").permitAll()
+                .requestMatchers(HttpMethod.GET, "/shipping/quote").permitAll()
+                .requestMatchers(HttpMethod.GET, "/reviews/product/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/wishlist/**", "/users/me/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/reviews/**").authenticated()
                 .requestMatchers("/orders/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/products", "/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/products/**").hasRole("ADMIN")

@@ -102,6 +102,14 @@ export class OrderService {
       .pipe(map((o) => this.normalizeOrder(o)));
   }
 
+  guestCheckout(req: CheckoutRequest & { customerName: string; customerEmail: string; customerPhone: string }): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.api}/orders/guest-checkout`, req);
+  }
+
+  getOrder(id: string): Observable<Order> {
+    return this.http.get<Order>(`${this.api}/orders/${id}`).pipe(map((o) => this.normalizeOrder(o)));
+  }
+
   getMyOrders(): Observable<Order[]> {
     return this.http
       .get<Order[]>(`${this.api}/orders/mine`)

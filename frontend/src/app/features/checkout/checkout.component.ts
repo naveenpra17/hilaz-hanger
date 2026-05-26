@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
@@ -6,6 +6,7 @@ import { OrderService } from '../../core/services/order.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CouponService } from '../../core/services/coupon.service';
+import { StoreService } from '../../core/services/store.service';
 
 @Component({
   selector: 'app-checkout',
@@ -19,6 +20,15 @@ import { CouponService } from '../../core/services/coupon.service';
         <p class="text-gray-500 text-center py-8">Your cart is empty.</p>
         <a routerLink="/shop" class="btn-primary block text-center">Continue Shopping</a>
       } @else {
+        @if (!auth.isLoggedIn()) {
+          <section class="section-card mb-6 space-y-3">
+            <h2 class="font-serif font-bold">Guest checkout</h2>
+            <p class="text-xs text-gray-500">Or <a routerLink="/login" class="text-burgundy-700 underline">log in</a> for faster checkout.</p>
+            <input class="input-field" placeholder="Full name *" [(ngModel)]="guestName" name="gname" />
+            <input class="input-field" type="email" placeholder="Email *" [(ngModel)]="guestEmail" name="gemail" />
+            <input class="input-field" placeholder="Phone *" [(ngModel)]="guestPhone" name="gphone" />
+          </section>
+        }
         <section class="mb-6">
           <h2 class="font-serif font-bold mb-3">Shipping Address</h2>
           <input class="input-field mb-3" placeholder="Street address *" [(ngModel)]="street" required />
@@ -52,7 +62,10 @@ import { CouponService } from '../../core/services/coupon.service';
 
         <div class="bg-pink-50 rounded-2xl p-4 space-y-2 text-sm mb-6">
           <div class="flex justify-between"><span>Items Total</span><span>₹{{ cart.subtotal() }}</span></div>
-          <div class="flex justify-between"><span>Shipping</span><span>₹{{ shippingPrice }}</span></div>
+          <div class="flex justify-between"><span>Shipping</span><span>{{ shippingPrice === 0 ? 'FREE' : '₹' + shippingPrice }}</span></div>
+          @if (shippingNote()) {
+            <p class="text-xs text-gray-500">{{ shippingNote() }}</p>
+          }
           @if (couponDiscount() > 0) {
             <div class="flex justify-between text-green-700"><span>Discount</span><span>−₹{{ couponDiscount() }}</span></div>
           }
@@ -81,14 +94,18 @@ import { CouponService } from '../../core/services/coupon.service';
     </div>
   `,
 })
-export class CheckoutComponent {
+export class CheckoutComponent implements OnInit {
   readonly cart = inject(CartService);
   private readonly orderService = inject(OrderService);
   private readonly paymentService = inject(PaymentService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly couponService = inject(CouponService);
+  private readonly storeService = inject(StoreService);
 
+  guestName = '';
+  guestEmail = '';
+  guestPhone = '';
   street = '';
   couponCode = '';
   readonly couponDiscount = signal(0);
@@ -99,9 +116,23 @@ export class CheckoutComponent {
   pincode = '';
   paymentMethod = 'UPI';
   shippingPrice = 0;
+  readonly shippingNote = signal('');
   readonly loading = signal(false);
   readonly error = signal('');
   readonly success = signal('');
+
+  ngOnInit(): void {
+    this.refreshShipping();
+  }
+
+  refreshShipping(): void {
+    this.storeService.shippingQuote(this.cart.subtotal()).subscribe({
+      next: (q) => {
+        this.shippingPrice = q.shippingPrice;
+        this.shippingNote.set(q.description);
+      },
+    });
+  }
 
   orderTotal(): number {
     return Math.max(0, this.cart.subtotal() + this.shippingPrice - this.couponDiscount());
@@ -139,7 +170,7 @@ export class CheckoutComponent {
     this.loading.set(true);
     this.error.set('');
 
-    const req = {
+    const base = {
       items: this.cart.items().map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
       shippingStreet: this.street,
       shippingCity: this.city,
@@ -150,7 +181,22 @@ export class CheckoutComponent {
       paymentMethod: this.paymentMethod,
     };
 
-    this.orderService.checkout(req).subscribe({
+    const order$ = this.auth.isLoggedIn()
+      ? this.orderService.checkout(base)
+      : this.orderService.guestCheckout({
+          ...base,
+          customerName: this.guestName,
+          customerEmail: this.guestEmail,
+          customerPhone: this.guestPhone,
+        });
+
+    if (!this.auth.isLoggedIn() && (!this.guestName || !this.guestEmail || !this.guestPhone)) {
+      this.error.set('Please fill in guest contact details.');
+      this.loading.set(false);
+      return;
+    }
+
+    order$.subscribe({
       next: async (res) => {
         if (!res.requiresPayment) {
           this.complete(res.order.orderNumber);

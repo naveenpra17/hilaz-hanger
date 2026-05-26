@@ -73,6 +73,21 @@ public final class OrderDtos {
             @NotNull OrderStatus status
     ) {}
 
+    public record GuestCheckoutRequest(
+            @NotBlank String customerName,
+            @NotBlank String customerEmail,
+            @NotBlank String customerPhone,
+            @NotEmpty List<CheckoutItemRequest> items,
+            @NotBlank String shippingStreet,
+            @NotBlank String shippingCity,
+            @NotBlank String shippingPincode,
+            BigDecimal shippingPrice,
+            BigDecimal discount,
+            String couponCode,
+            @NotBlank String paymentMethod,
+            String notes
+    ) {}
+
     public record CheckoutResponse(
             OrderDto order,
             String razorpayOrderId,

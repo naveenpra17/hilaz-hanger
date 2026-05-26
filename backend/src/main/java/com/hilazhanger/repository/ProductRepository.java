@@ -28,4 +28,19 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @Query("SELECT p FROM Product p WHERE p.id IN :ids")
     List<Product> findAllByIdIn(@Param("ids") Collection<UUID> ids);
+
+    Page<Product> findByCategoryIdAndActiveTrue(UUID categoryId, Pageable pageable);
+
+    Page<Product> findByActiveTrue(Pageable pageable);
+
+    Page<Product> findByActiveFalse(Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.variants v WHERE v.stockQuantity > 0 AND v.stockQuantity <= 5")
+    Page<Product> findLowStock(Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.variants v WHERE v.stockQuantity = 0")
+    Page<Product> findOutOfStock(Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.categoryId = :categoryId AND p.active = true AND p.id <> :excludeId")
+    List<Product> findRelated(@Param("categoryId") UUID categoryId, @Param("excludeId") UUID excludeId, Pageable pageable);
 }

@@ -36,15 +36,27 @@ public class OrderController {
         );
     }
 
-    @PostMapping("/verify-payment")
-    public OrderDtos.OrderDto verifyPayment(@Valid @RequestBody OrderDtos.VerifyPaymentRequest request) {
-        return orderService.verifyPayment(request);
+    @PostMapping("/guest-checkout")
+    public OrderDtos.CheckoutResponse guestCheckout(@Valid @RequestBody OrderDtos.GuestCheckoutRequest request) {
+        return orderService.guestCheckout(request);
     }
 
     @GetMapping("/mine")
     public java.util.List<OrderDtos.OrderDto> myOrders(Authentication auth) {
         AuthDtos.UserDto user = loadUser(auth);
         return orderService.listByUser(user.id());
+    }
+
+    @GetMapping("/{id}")
+    public OrderDtos.OrderDto getOrder(Authentication auth, @PathVariable UUID id) {
+        AuthDtos.UserDto user = loadUser(auth);
+        boolean admin = user.role().name().equals("ADMIN");
+        return orderService.getOrder(user.id(), id, admin);
+    }
+
+    @PostMapping("/verify-payment")
+    public OrderDtos.OrderDto verifyPayment(@Valid @RequestBody OrderDtos.VerifyPaymentRequest request) {
+        return orderService.verifyPayment(request);
     }
 
     private AuthDtos.UserDto loadUser(Authentication auth) {

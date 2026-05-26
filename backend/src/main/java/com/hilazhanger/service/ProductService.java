@@ -4,6 +4,7 @@ import com.hilazhanger.domain.entity.Product;
 import com.hilazhanger.domain.entity.ProductImage;
 import com.hilazhanger.domain.entity.ProductVariant;
 import com.hilazhanger.dto.ProductDtos;
+import com.hilazhanger.repository.CategoryRepository;
 import com.hilazhanger.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,18 +24,34 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional(readOnly = true)
-    public ProductDtos.ProductPageDto list(String search, int page, int size) {
+    public ProductDtos.ProductPageDto list(String search, String categorySlug, String filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         String term = blankToNull(search);
-        Page<Product> result = term == null
-                ? productRepository.findAll(pageable)
-                : productRepository.searchByTerm(term, pageable);
+        UUID categoryId = resolveCategoryId(categorySlug);
+        Page<Product> result;
+        if (term != null) {
+            result = productRepository.searchByTerm(term, pageable);
+        } else if (categoryId != null) {
+            result = productRepository.findByCategoryIdAndActiveTrue(categoryId, pageable);
+        } else if ("low-stock".equals(filter)) {
+            result = productRepository.findLowStock(pageable);
+        } else if ("out-of-stock".equals(filter)) {
+            result = productRepository.findOutOfStock(pageable);
+        } else if ("inactive".equals(filter)) {
+            result = productRepository.findByActiveFalse(pageable);
+        } else if ("active".equals(filter)) {
+            result = productRepository.findByActiveTrue(pageable);
+        } else {
+            result = productRepository.findAll(pageable);
+        }
         List<UUID> ids = result.getContent().stream().map(Product::getId).toList();
         Map<UUID, Product> loaded = ids.isEmpty()
                 ? Map.of()
@@ -54,6 +71,19 @@ public class ProductService {
                 result.getNumber(),
                 result.getSize()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductDtos.ProductDto> related(UUID productId, int limit) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (product.getCategoryId() == null) {
+            return List.of();
+        }
+        return productRepository.findRelated(product.getCategoryId(), productId, PageRequest.of(0, limit))
+                .stream()
+                .map(this::toDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -201,6 +231,13 @@ public class ProductService {
                         .toList(),
                 totalStock
         );
+    }
+
+    private UUID resolveCategoryId(String categorySlug) {
+        if (categorySlug == null || categorySlug.isBlank()) {
+            return null;
+        }
+        return categoryRepository.findBySlug(categorySlug).map(c -> c.getId()).orElse(null);
     }
 
     private String blankToNull(String s) {

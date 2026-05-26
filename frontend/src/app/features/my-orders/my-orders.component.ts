@@ -52,6 +52,7 @@ import { Order } from '../../core/models/order.model';
               <p class="text-xs text-gray-500 mt-2">
                 Ship to: {{ o.shippingStreet }}, {{ o.shippingCity }} — {{ o.shippingPincode }}
               </p>
+              <a [routerLink]="['/orders', o.id]" class="text-xs text-burgundy-700 underline mt-2 inline-block">View details →</a>
             </article>
           }
         </div>

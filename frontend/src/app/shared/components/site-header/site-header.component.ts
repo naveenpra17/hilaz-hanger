@@ -1,5 +1,6 @@
 import { Component, inject, input, signal, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
 import { CategoryService } from '../../../core/services/category.service';
@@ -8,7 +9,7 @@ import { Category } from '../../../core/models/category.model';
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, FormsModule],
   template: `
     <header class="bg-header-gradient text-white sticky top-0 z-40 shadow-md">
       <div class="page-container py-2.5 sm:py-3">
@@ -60,6 +61,8 @@ import { Category } from '../../../core/models/category.model';
                   type="search"
                   placeholder="Search products..."
                   class="w-full py-2 pl-4 pr-10 rounded-full bg-burgundy-700/80 border border-burgundy-600 text-white placeholder:text-burgundy-200 text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+                  [(ngModel)]="searchQuery"
+                  (keydown.enter)="goSearch()"
                 />
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gold pointer-events-none">🔍</span>
               </div>
@@ -94,6 +97,8 @@ import { Category } from '../../../core/models/category.model';
                 type="search"
                 placeholder="Search products..."
                 class="w-full py-2.5 pl-4 pr-12 rounded-full bg-cream text-burgundy-900 placeholder:text-gray-400 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+                [(ngModel)]="searchQuery"
+                (keydown.enter)="goSearch()"
               />
               <span class="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-gold flex items-center justify-center text-white text-sm pointer-events-none">🔍</span>
             </div>
@@ -130,6 +135,8 @@ import { Category } from '../../../core/models/category.model';
 export class SiteHeaderComponent implements OnInit {
   readonly compact = input(false);
   readonly menuOpen = signal(false);
+  searchQuery = '';
+  private router = inject(Router);
   readonly categories = signal<Category[]>([]);
   readonly auth = inject(AuthService);
   private readonly cart = inject(CartService);
@@ -138,5 +145,11 @@ export class SiteHeaderComponent implements OnInit {
 
   ngOnInit(): void {
     this.categoryService.getCategories().subscribe((c) => this.categories.set(c));
+  }
+
+  goSearch(): void {
+    const q = this.searchQuery.trim();
+    this.router.navigate(['/shop'], { queryParams: q ? { search: q } : {} });
+    this.menuOpen.set(false);
   }
 }
