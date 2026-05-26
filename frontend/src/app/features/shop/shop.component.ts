@@ -100,6 +100,7 @@ export class ShopComponent implements OnInit {
     this.categoryService.getCategories().subscribe((c) => this.categories.set(c));
     this.route.queryParamMap.subscribe((params) => {
       this.activeCategory.set(params.get('category'));
+      this.search = params.get('search') ?? '';
       this.load();
     });
   }
