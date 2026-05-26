@@ -10,6 +10,8 @@ export const routes: Routes = [
       { path: '', loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent) },
       { path: 'shop', loadComponent: () => import('./features/shop/shop.component').then((m) => m.ShopComponent) },
       { path: 'product/:id', loadComponent: () => import('./features/product-detail/product-detail.component').then((m) => m.ProductDetailComponent) },
+      // Old links used /product/some-long-slug before we switched to product UUIDs
+      { path: 'p/:id', redirectTo: 'product/:id', pathMatch: 'full' },
       { path: 'cart', loadComponent: () => import('./features/cart/cart.component').then((m) => m.CartComponent) },
       { path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then((m) => m.CheckoutComponent) },
       { path: 'order-confirmation', loadComponent: () => import('./features/order-confirmation/order-confirmation.component').then((m) => m.OrderConfirmationComponent) },

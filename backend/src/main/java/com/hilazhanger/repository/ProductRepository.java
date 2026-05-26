@@ -14,8 +14,8 @@ import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-    @EntityGraph(attributePaths = {"images", "variants"})
-    Optional<Product> findBySlug(String slug);
+    @Query("SELECT p.id FROM Product p WHERE p.slug = :slug")
+    Optional<UUID> findIdBySlug(@Param("slug") String slug);
 
     boolean existsBySlug(String slug);
 

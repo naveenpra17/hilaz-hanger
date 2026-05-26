@@ -66,8 +66,8 @@ public class Product {
     @Column(columnDefinition = "text[]")
     private List<String> sizes = new ArrayList<>();
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
+    /** Stored as JSONB in PostgreSQL; keep as String for simple read/write. */
+    @Column(columnDefinition = "TEXT")
     private String colors = "[]";
 
     @Column(name = "rating_avg", precision = 3, scale = 2)

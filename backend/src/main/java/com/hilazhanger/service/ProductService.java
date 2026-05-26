@@ -93,9 +93,9 @@ public class ProductService {
         if (slug == null || slug.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product slug is required");
         }
-        return productRepository.findBySlug(slug.trim())
-                .map(this::toDto)
+        UUID id = productRepository.findIdBySlug(slug.trim())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        return getById(id);
     }
 
     @Transactional(readOnly = true)

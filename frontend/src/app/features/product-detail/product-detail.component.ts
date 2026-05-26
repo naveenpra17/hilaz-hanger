@@ -23,7 +23,8 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
         <p class="text-burgundy-800">{{ loadError() }}</p>
         <a routerLink="/shop" class="btn-primary inline-block">Back to shop</a>
       </div>
-    } @else if (product(); as p) {
+    } @else {
+      @if (product(); as p) {
       <div class="page-container page-section max-w-6xl">
         <a routerLink="/shop" class="text-sm text-burgundy-600 mb-4 inline-flex items-center min-h-[44px]">← Back</a>
 
@@ -170,6 +171,7 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
         </div>
         </div>
       </div>
+      }
     }
   `,
 })
@@ -203,13 +205,7 @@ export class ProductDetailComponent {
       .pipe(switchMap((params) => {
         this.loading.set(true);
         this.loadError.set('');
-        const param = params.get('id')!;
-        const uuid =
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        // Always load by ID when possible (reliable on API); slug only for old bookmarked URLs
-        return uuid.test(param)
-          ? this.productService.getById(param)
-          : this.productService.getBySlug(param);
+        return this.productService.getByIdOrSlug(params.get('id')!);
       }))
       .subscribe({
         next: (p) => {

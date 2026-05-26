@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError, timer } from 'rxjs';
-import { catchError, delay, map, retry } from 'rxjs/operators';
+import { catchError, delay, map, retry, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product, ProductPage } from '../models/product.model';
 import { MOCK_PRODUCTS } from '../data/mock-products';
@@ -51,7 +51,10 @@ export class ProductService {
     }
     return this.http
       .get<Product>(`${this.api}/by-slug`, { params: { slug } })
-      .pipe(map((p) => this.normalize(p)));
+      .pipe(
+        map((p) => this.normalize(p)),
+        catchError(() => this.resolveSlugViaList(slug))
+      );
   }
 
   /** Load by UUID (shop links) or slug (old bookmarks). */
@@ -59,6 +62,19 @@ export class ProductService {
     const uuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuid.test(idOrSlug) ? this.getById(idOrSlug) : this.getBySlug(idOrSlug);
+  }
+
+  /** Works even when /by-slug is broken: find in catalog then load by id. */
+  private resolveSlugViaList(slug: string): Observable<Product> {
+    return this.getProducts({ size: 500 }).pipe(
+      switchMap((page) => {
+        const match = (page.content ?? []).find((p) => p.slug === slug);
+        if (!match?.id) {
+          return throwError(() => ({ status: 404, error: { message: 'Product not found' } }));
+        }
+        return this.getById(match.id);
+      })
+    );
   }
 
   getById(id: string): Observable<Product> {

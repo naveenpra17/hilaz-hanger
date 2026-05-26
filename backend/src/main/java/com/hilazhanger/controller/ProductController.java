@@ -34,8 +34,8 @@ public class ProductController {
         return productService.getBySlug(slug);
     }
 
-    @GetMapping("/slug/{slug}")
-    public ProductDtos.ProductDto bySlugPath(@PathVariable String slug) {
+    @GetMapping("/slug/{slug:.+}")
+    public ProductDtos.ProductDto bySlugPath(@PathVariable("slug") String slug) {
         return productService.getBySlug(slug);
     }
 
