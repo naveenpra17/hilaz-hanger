@@ -36,7 +36,9 @@ public final class ProductDtos {
             String colors,
             List<ProductImageDto> images,
             List<ProductVariantDto> variants,
-            Integer totalStock
+            Integer totalStock,
+            String metaTitle,
+            String metaDescription
     ) {}
 
     public record ProductPageDto(
@@ -62,7 +64,9 @@ public final class ProductDtos {
             List<String> sizes,
             List<ProductImageDto> images,
             List<VariantInput> variants,
-            Integer defaultStockPerSize
+            Integer defaultStockPerSize,
+            String metaTitle,
+            String metaDescription
     ) {}
 
     public record UpdateProductRequest(
@@ -80,6 +84,8 @@ public final class ProductDtos {
             List<String> sizes,
             List<ProductImageDto> images,
             List<VariantInput> variants,
-            Integer defaultStockPerSize
+            Integer defaultStockPerSize,
+            String metaTitle,
+            String metaDescription
     ) {}
 }

@@ -122,6 +122,10 @@ export class OrderService {
       .pipe(map((o) => this.normalizeOrder(o)));
   }
 
+  downloadInvoice(orderId: string): Observable<Blob> {
+    return this.http.get(`${this.api}/orders/${orderId}/invoice`, { responseType: 'blob' });
+  }
+
   markPaid(orderId: string): Observable<Order> {
     if (this.useMock) {
       const order = MOCK_ORDERS.find((o) => o.id === orderId);

@@ -26,6 +26,8 @@ public class OrderService {
     private final CouponService couponService;
     private final NotificationService notificationService;
     private final ShippingService shippingService;
+    private final GstService gstService;
+    private final InvoiceService invoiceService;
 
     public OrderService(
             OrderRepository orderRepository,
@@ -33,7 +35,9 @@ public class OrderService {
             RazorpayService razorpayService,
             CouponService couponService,
             NotificationService notificationService,
-            ShippingService shippingService
+            ShippingService shippingService,
+            GstService gstService,
+            InvoiceService invoiceService
     ) {
         this.orderRepository = orderRepository;
         this.variantRepository = variantRepository;
@@ -41,6 +45,8 @@ public class OrderService {
         this.couponService = couponService;
         this.notificationService = notificationService;
         this.shippingService = shippingService;
+        this.gstService = gstService;
+        this.invoiceService = invoiceService;
     }
 
     @Transactional
@@ -97,13 +103,40 @@ public class OrderService {
         Order order = orderRepository.findById(req.orderId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         razorpayService.verifySignature(req.razorpayOrderId(), req.razorpayPaymentId(), req.razorpaySignature());
+        return toDto(markPaid(order, req.razorpayPaymentId()));
+    }
+
+    @Transactional
+    public void confirmPaymentFromWebhook(String razorpayOrderId, String razorpayPaymentId) {
+        orderRepository.findByRazorpayOrderId(razorpayOrderId).ifPresent(order -> {
+            if (!order.isPaid()) {
+                markPaid(order, razorpayPaymentId);
+            }
+        });
+    }
+
+    public byte[] downloadInvoice(UUID userId, UUID orderId, boolean admin) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!admin && (order.getUserId() == null || !order.getUserId().equals(userId))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return invoiceService.generatePdf(order);
+    }
+
+    private Order markPaid(Order order, String razorpayPaymentId) {
+        if (order.isPaid()) {
+            return order;
+        }
         order.setPaid(true);
         order.setPaymentStatus(PaymentStatus.PAID);
         order.setStatus(OrderStatus.CONFIRMED);
-        order.setRazorpayPaymentId(req.razorpayPaymentId());
+        if (razorpayPaymentId != null && !razorpayPaymentId.isBlank()) {
+            order.setRazorpayPaymentId(razorpayPaymentId);
+        }
         order = orderRepository.save(order);
         notificationService.sendOrderConfirmation(order);
-        return toDto(order);
+        return order;
     }
 
     @Transactional
@@ -194,8 +227,14 @@ public class OrderService {
             }
             if (order.getStatus() != OrderStatus.CANCELLED) {
                 restoreStock(order);
+                if (order.isPaid() && order.getRazorpayPaymentId() != null && !order.getRazorpayPaymentId().isBlank()) {
+                    String refundId = razorpayService.refundPayment(order.getRazorpayPaymentId(), order.getTotal());
+                    order.setRazorpayRefundId(refundId);
+                }
                 order.setStatus(OrderStatus.CANCELLED);
-                order.setPaymentStatus(PaymentStatus.REFUNDED);
+                if (order.isPaid()) {
+                    order.setPaymentStatus(PaymentStatus.REFUNDED);
+                }
             }
         } else if (newStatus == OrderStatus.SHIPPED) {
             if (order.getStatus() == OrderStatus.CANCELLED) {
@@ -268,7 +307,9 @@ public class OrderService {
             discount = req.discount().min(subtotal);
         }
 
-        BigDecimal total = subtotal.add(shipping).subtract(discount).max(BigDecimal.ZERO);
+        BigDecimal taxableBase = subtotal.subtract(discount).max(BigDecimal.ZERO);
+        GstService.GstBreakdown gst = gstService.calculate(taxableBase);
+        BigDecimal total = taxableBase.add(gst.taxAmount()).add(shipping).max(BigDecimal.ZERO);
 
         Order order = Order.builder()
                 .orderNumber("HH-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
@@ -284,6 +325,11 @@ public class OrderService {
                 .shippingPrice(shipping)
                 .discount(discount)
                 .couponCode(couponCode)
+                .taxableAmount(gst.taxableAmount())
+                .taxRate(gst.taxRate())
+                .taxAmount(gst.taxAmount())
+                .cgstAmount(gst.cgstAmount())
+                .sgstAmount(gst.sgstAmount())
                 .total(total)
                 .shippingStreet(req.shippingStreet())
                 .shippingCity(req.shippingCity())
@@ -321,6 +367,11 @@ public class OrderService {
                 o.getSubtotal(),
                 o.getShippingPrice(),
                 o.getDiscount(),
+                o.getTaxableAmount(),
+                o.getTaxRate(),
+                o.getTaxAmount(),
+                o.getCgstAmount(),
+                o.getSgstAmount(),
                 o.getTotal(),
                 o.getShippingStreet(),
                 o.getShippingCity(),

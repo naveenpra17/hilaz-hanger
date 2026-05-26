@@ -49,6 +49,15 @@ app:
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:}
     key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+  frontend:
+    url: ${APP_FRONTEND_URL:https://hilaz-hanger.vercel.app}
+  gst:
+    rate-percent: ${APP_GST_RATE_PERCENT:18}
+  store:
+    name: ${APP_STORE_NAME:Hilaz Hanger}
+    gstin: ${APP_STORE_GSTIN:}
+    address: ${APP_STORE_ADDRESS:Coimbatore, Tamil Nadu, India}
   mail:
     enabled: ${APP_MAIL_ENABLED:false}
     from: ${APP_MAIL_FROM:noreply@hilazhanger.com}

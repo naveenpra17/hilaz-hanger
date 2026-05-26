@@ -27,4 +27,22 @@ export class CategoryService {
       catchError(() => of(FALLBACK_CATEGORIES))
     );
   }
+
+  listAdmin(): Observable<Category[]> {
+    return this.http
+      .get<Category[]>(`${environment.apiUrl}/admin/categories`)
+      .pipe(map((list) => list.map((c) => ({ ...c, id: String(c.id) }))));
+  }
+
+  create(body: Partial<Category>): Observable<Category> {
+    return this.http.post<Category>(`${environment.apiUrl}/admin/categories`, body);
+  }
+
+  update(id: string, body: Partial<Category>): Observable<Category> {
+    return this.http.put<Category>(`${environment.apiUrl}/admin/categories/${id}`, body);
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/admin/categories/${id}`);
+  }
 }

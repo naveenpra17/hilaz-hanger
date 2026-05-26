@@ -8,6 +8,7 @@ import { CartService } from '../../core/services/cart.service';
 import { ReviewService, Review } from '../../core/services/review.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
+import { SeoService } from '../../core/services/seo.service';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 
 @Component({
@@ -184,11 +185,14 @@ export class ProductDetailComponent {
   readonly selectedColor = signal<ProductColor | null>(null);
   readonly qty = signal(1);
 
+  private seo = inject(SeoService);
+
   constructor(private productService: ProductService) {
     this.route.paramMap
       .pipe(switchMap((params) => this.productService.getBySlug(params.get('slug')!)))
       .subscribe((p) => {
         this.product.set(p);
+        this.seo.setProduct(p);
         this.selectedSize.set(p.sizes[0] ?? null);
         this.selectedColor.set(p.colors[0] ?? null);
         this.productService.getRelated(p.id).subscribe((list) => this.related.set(list));

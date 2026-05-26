@@ -48,6 +48,15 @@ public class NotificationService {
                 + " confirmed. Total ₹" + order.getTotal() + ". Thank you!");
     }
 
+    public void sendPasswordResetEmail(String to, String name, String resetLink) {
+        String subject = "Reset your Hilaz Hanger password";
+        String body = "Hi " + (name != null ? name : "there") + ",\n\n"
+                + "We received a request to reset your password. Open this link within 1 hour:\n\n"
+                + resetLink + "\n\n"
+                + "If you did not request this, ignore this email.\n\n— Hilaz Hanger";
+        sendEmail(to, subject, body);
+    }
+
     public void sendOrderStatusUpdate(Order order) {
         String subject = "Order update — " + order.getOrderNumber();
         String body = "Hi " + order.getCustomerName() + ",\n\nYour order status is now: "

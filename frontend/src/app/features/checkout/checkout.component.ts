@@ -7,6 +7,8 @@ import { PaymentService } from '../../core/services/payment.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CouponService } from '../../core/services/coupon.service';
 import { StoreService } from '../../core/services/store.service';
+import { AddressService } from '../../core/services/address.service';
+import { SavedAddress } from '../../core/models/address.model';
 
 @Component({
   selector: 'app-checkout',
@@ -27,6 +29,16 @@ import { StoreService } from '../../core/services/store.service';
             <input class="input-field" placeholder="Full name *" [(ngModel)]="guestName" name="gname" />
             <input class="input-field" type="email" placeholder="Email *" [(ngModel)]="guestEmail" name="gemail" />
             <input class="input-field" placeholder="Phone *" [(ngModel)]="guestPhone" name="gphone" />
+          </section>
+        }
+        @if (auth.isLoggedIn() && addresses().length > 0) {
+          <section class="mb-6">
+            <h2 class="font-serif font-bold mb-3">Saved address</h2>
+            <select class="input-field" [(ngModel)]="selectedAddressId" name="addr" (ngModelChange)="onAddressPick($event)">
+              @for (a of addresses(); track a.id) {
+                <option [value]="a.id">{{ a.label }} — {{ a.city }}</option>
+              }
+            </select>
           </section>
         }
         <section class="mb-6">
@@ -69,6 +81,7 @@ import { StoreService } from '../../core/services/store.service';
           @if (couponDiscount() > 0) {
             <div class="flex justify-between text-green-700"><span>Discount</span><span>−₹{{ couponDiscount() }}</span></div>
           }
+          <div class="flex justify-between text-gray-600"><span>GST (18%)</span><span>₹{{ estimatedGst() }}</span></div>
           <div class="flex justify-between font-bold text-base border-t border-pink-200 pt-2">
             <span>Total</span><span>₹{{ orderTotal() }}</span>
           </div>
@@ -98,11 +111,14 @@ export class CheckoutComponent implements OnInit {
   readonly cart = inject(CartService);
   private readonly orderService = inject(OrderService);
   private readonly paymentService = inject(PaymentService);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly couponService = inject(CouponService);
   private readonly storeService = inject(StoreService);
+  private readonly addressService = inject(AddressService);
 
+  readonly addresses = signal<SavedAddress[]>([]);
+  selectedAddressId = '';
   guestName = '';
   guestEmail = '';
   guestPhone = '';
@@ -123,6 +139,38 @@ export class CheckoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.refreshShipping();
+    if (this.auth.isLoggedIn()) {
+      const u = this.auth.user();
+      if (u?.fullName) this.guestName = u.fullName;
+      if (u?.email) this.guestEmail = u.email ?? '';
+      if (u?.phone) this.guestPhone = u.phone ?? '';
+      this.addressService.list().subscribe((list) => {
+        this.addresses.set(list);
+        const def = list.find((a) => a.defaultAddress) ?? list[0];
+        if (def) {
+          this.selectedAddressId = def.id;
+          this.applyAddress(def);
+        }
+      });
+    }
+  }
+
+  onAddressPick(id: string): void {
+    const addr = this.addresses().find((a) => a.id === id);
+    if (addr) this.applyAddress(addr);
+  }
+
+  private applyAddress(a: SavedAddress): void {
+    this.street = a.streetLine;
+    this.city = a.city;
+    this.pincode = a.pincode;
+    if (a.fullName) this.guestName = a.fullName;
+    if (a.phone) this.guestPhone = a.phone;
+  }
+
+  estimatedGst(): number {
+    const taxable = Math.max(0, this.cart.subtotal() - this.couponDiscount());
+    return Math.round(taxable * 0.18 * 100) / 100;
   }
 
   refreshShipping(): void {
@@ -135,7 +183,8 @@ export class CheckoutComponent implements OnInit {
   }
 
   orderTotal(): number {
-    return Math.max(0, this.cart.subtotal() + this.shippingPrice - this.couponDiscount());
+    const taxable = Math.max(0, this.cart.subtotal() - this.couponDiscount());
+    return Math.max(0, taxable + this.estimatedGst() + this.shippingPrice);
   }
 
   applyCoupon(): void {
@@ -216,9 +265,9 @@ export class CheckoutComponent implements OnInit {
             amountPaise: res.amountPaise ?? 0,
             orderId: res.razorpayOrderId!,
             orderNumber: res.order.orderNumber,
-            customerName: this.auth.user()?.fullName ?? 'Customer',
-            customerEmail: this.auth.user()?.email,
-            customerPhone: this.auth.user()?.phone,
+            customerName: this.auth.user()?.fullName ?? this.guestName ?? 'Customer',
+            customerEmail: this.auth.user()?.email ?? this.guestEmail,
+            customerPhone: this.auth.user()?.phone ?? this.guestPhone,
             onSuccess: (rzpRes) => {
               this.orderService
                 .verifyPayment({

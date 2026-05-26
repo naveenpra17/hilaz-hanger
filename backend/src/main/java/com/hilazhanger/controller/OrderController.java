@@ -5,7 +5,10 @@ import com.hilazhanger.dto.OrderDtos;
 import com.hilazhanger.repository.UserRepository;
 import com.hilazhanger.service.OrderService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,6 +60,17 @@ public class OrderController {
     @PostMapping("/verify-payment")
     public OrderDtos.OrderDto verifyPayment(@Valid @RequestBody OrderDtos.VerifyPaymentRequest request) {
         return orderService.verifyPayment(request);
+    }
+
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> invoice(Authentication auth, @PathVariable UUID id) {
+        AuthDtos.UserDto user = loadUser(auth);
+        boolean admin = user.role().name().equals("ADMIN");
+        byte[] pdf = orderService.downloadInvoice(user.id(), id, admin);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice-" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     private AuthDtos.UserDto loadUser(Authentication auth) {

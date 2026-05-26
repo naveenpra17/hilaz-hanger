@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findByActiveTrueOrderBySortOrderAsc();
     Optional<Category> findBySlug(String slug);
+    boolean existsBySlug(String slug);
 }

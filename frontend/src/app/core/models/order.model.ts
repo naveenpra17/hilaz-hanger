@@ -28,6 +28,11 @@ export interface Order {
   subtotal: number;
   shippingPrice: number;
   discount: number;
+  taxableAmount?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
   total: number;
   shippingStreet: string;
   shippingCity: string;

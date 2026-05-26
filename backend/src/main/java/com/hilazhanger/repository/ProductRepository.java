@@ -33,6 +33,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     Page<Product> findByActiveTrue(Pageable pageable);
 
+    List<Product> findByActiveTrue();
+
     Page<Product> findByActiveFalse(Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Product p JOIN p.variants v WHERE v.stockQuantity > 0 AND v.stockQuantity <= 5")

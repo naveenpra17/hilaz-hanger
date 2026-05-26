@@ -118,6 +118,12 @@ interface GalleryImage {
         </div>
       </div>
 
+      <div class="section-card space-y-3">
+        <h3 class="font-semibold text-burgundy-800 border-b pb-2">SEO (Google)</h3>
+        <input class="input-field" placeholder="Meta title (optional)" [(ngModel)]="metaTitle" name="mtitle" />
+        <textarea class="input-field" rows="2" placeholder="Meta description (optional, ~160 chars)" [(ngModel)]="metaDescription" name="mdesc"></textarea>
+      </div>
+
       <div class="section-card">
         <h3 class="font-semibold text-burgundy-800 border-b pb-2 mb-3">Product Preview</h3>
         <div class="flex gap-4">
@@ -145,6 +151,8 @@ interface GalleryImage {
 export class ProductFormComponent implements OnInit {
   name = '';
   description = '';
+  metaTitle = '';
+  metaDescription = '';
   price = 999;
   compareAtPrice?: number;
   defaultStockPerSize = 10;
@@ -253,6 +261,8 @@ export class ProductFormComponent implements OnInit {
   patch(p: Product): void {
     this.name = p.name;
     this.description = p.description ?? '';
+    this.metaTitle = p.metaTitle ?? '';
+    this.metaDescription = p.metaDescription ?? '';
     this.price = p.price;
     this.compareAtPrice = p.compareAtPrice;
     this.selectedSizes = p.sizes?.length ? [...p.sizes] : [...new Set((p.variants ?? []).map((v) => v.size))];
@@ -328,6 +338,8 @@ export class ProductFormComponent implements OnInit {
       expressShipping: this.expressShipping,
       slug: this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       defaultStockPerSize: this.defaultStockPerSize,
+      metaTitle: this.metaTitle || null,
+      metaDescription: this.metaDescription || null,
       variants,
       images: this.galleryImages.map((img) => ({
         url: img.url,

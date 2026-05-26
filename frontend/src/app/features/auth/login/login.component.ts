@@ -17,7 +17,10 @@ import { AuthService } from '../../../core/services/auth.service';
           <input type="email" class="input-field mt-1" [(ngModel)]="email" name="email" required />
         </div>
         <div>
-          <label class="text-sm font-medium">Password</label>
+          <div class="flex justify-between items-center">
+            <label class="text-sm font-medium">Password</label>
+            <a routerLink="/forgot-password" class="text-xs text-burgundy-600 underline">Forgot password?</a>
+          </div>
           <input type="password" class="input-field mt-1" [(ngModel)]="password" name="password" required />
         </div>
         @if (error()) {

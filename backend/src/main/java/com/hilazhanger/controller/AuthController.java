@@ -24,4 +24,14 @@ public class AuthController {
     public AuthDtos.AuthResponse register(@Valid @RequestBody AuthDtos.RegisterRequest request) {
         return authService.register(request);
     }
+
+    @PostMapping("/forgot-password")
+    public AuthDtos.MessageResponse forgotPassword(@Valid @RequestBody AuthDtos.ForgotPasswordRequest request) {
+        return authService.forgotPassword(request);
+    }
+
+    @PostMapping("/reset-password")
+    public AuthDtos.MessageResponse resetPassword(@Valid @RequestBody AuthDtos.ResetPasswordRequest request) {
+        return authService.resetPassword(request);
+    }
 }

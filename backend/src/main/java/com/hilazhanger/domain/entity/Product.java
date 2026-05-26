@@ -46,6 +46,12 @@ public class Product {
     @Column(name = "category_id")
     private UUID categoryId;
 
+    @Column(name = "meta_title", length = 255)
+    private String metaTitle;
+
+    @Column(name = "meta_description", length = 500)
+    private String metaDescription;
+
     @Column(nullable = false)
     private boolean active = true;
 

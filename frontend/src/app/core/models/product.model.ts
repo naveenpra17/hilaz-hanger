@@ -42,6 +42,8 @@ export interface Product {
   reviewCount?: number;
   createdAt?: string;
   totalStock?: number;
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 export interface ProductPage {

@@ -23,8 +23,15 @@ import { Order } from '../../core/models/order.model';
         <div class="mt-4 text-sm space-y-1">
           <div class="flex justify-between"><span>Subtotal</span><span>₹{{ o.subtotal }}</span></div>
           @if (o.discount > 0) { <div class="flex justify-between text-green-700"><span>Discount</span><span>−₹{{ o.discount }}</span></div> }
+          @if (o.taxAmount) {
+            <div class="flex justify-between text-gray-600"><span>GST ({{ o.taxRate ?? 18 }}%)</span><span>₹{{ o.taxAmount }}</span></div>
+          }
+          <div class="flex justify-between"><span>Shipping</span><span>₹{{ o.shippingPrice }}</span></div>
           <div class="flex justify-between font-bold"><span>Total</span><span>₹{{ o.total }}</span></div>
         </div>
+        @if (o.paid) {
+          <button type="button" class="btn-secondary mt-6" (click)="downloadInvoice(o.id)">Download tax invoice (PDF)</button>
+        }
       </div>
     }
   `,
@@ -37,5 +44,18 @@ export class OrderDetailComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.orderService.getOrder(id).subscribe((o) => this.order.set(o));
+  }
+
+  downloadInvoice(orderId: string): void {
+    this.orderService.downloadInvoice(orderId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${orderId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
   }
 }

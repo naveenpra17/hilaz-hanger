@@ -20,6 +20,8 @@ export const routes: Routes = [
       { path: 'saved', loadComponent: () => import('./features/saved/saved.component').then((m) => m.SavedComponent) },
       { path: 'login', loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent) },
       { path: 'register', loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent) },
+      { path: 'forgot-password', loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent) },
+      { path: 'reset-password', loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent) },
     ],
   },
   {
@@ -34,6 +36,7 @@ export const routes: Routes = [
       { path: 'products/:id/edit', loadComponent: () => import('./features/admin/product-form/product-form.component').then((m) => m.ProductFormComponent) },
       { path: 'orders', loadComponent: () => import('./features/admin/orders/orders.component').then((m) => m.OrdersComponent) },
       { path: 'coupons', loadComponent: () => import('./features/admin/coupons/coupons.component').then((m) => m.CouponsComponent) },
+      { path: 'categories', loadComponent: () => import('./features/admin/categories/categories.component').then((m) => m.CategoriesComponent) },
     ],
   },
   { path: '**', redirectTo: '' },

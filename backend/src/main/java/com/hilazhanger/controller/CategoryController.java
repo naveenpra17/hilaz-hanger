@@ -1,7 +1,7 @@
 package com.hilazhanger.controller;
 
-import com.hilazhanger.domain.entity.Category;
-import com.hilazhanger.repository.CategoryRepository;
+import com.hilazhanger.dto.CategoryDtos;
+import com.hilazhanger.service.CategoryService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,18 +12,14 @@ import java.util.List;
 @RequestMapping("/categories")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
-    public CategoryController(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
     }
 
     @GetMapping
-    public List<CategoryDto> list() {
-        return categoryRepository.findByActiveTrueOrderBySortOrderAsc().stream()
-                .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug(), c.getImageUrl()))
-                .toList();
+    public List<CategoryDtos.CategoryDto> list() {
+        return categoryService.listPublic();
     }
-
-    public record CategoryDto(java.util.UUID id, String name, String slug, String imageUrl) {}
 }

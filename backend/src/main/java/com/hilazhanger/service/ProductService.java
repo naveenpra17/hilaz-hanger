@@ -115,6 +115,8 @@ public class ProductService {
                 .expressShipping(req.expressShipping())
                 .labels(req.labels() != null ? req.labels() : List.of())
                 .sizes(req.sizes() != null ? req.sizes() : List.of())
+                .metaTitle(req.metaTitle())
+                .metaDescription(req.metaDescription())
                 .build();
         if (req.images() != null) {
             int i = 0;
@@ -149,6 +151,8 @@ public class ProductService {
         product.setExpressShipping(req.expressShipping());
         product.setLabels(req.labels() != null ? req.labels() : List.of());
         product.setSizes(req.sizes() != null ? req.sizes() : List.of());
+        product.setMetaTitle(req.metaTitle());
+        product.setMetaDescription(req.metaDescription());
         if (req.images() != null && !req.images().isEmpty()) {
             product.getImages().clear();
             int i = 0;
@@ -229,7 +233,9 @@ public class ProductService {
                 p.getVariants().stream()
                         .map(v -> new ProductDtos.ProductVariantDto(v.getId(), v.getColorName(), v.getColorHex(), v.getSize(), v.getStockQuantity()))
                         .toList(),
-                totalStock
+                totalStock,
+                p.getMetaTitle(),
+                p.getMetaDescription()
         );
     }
 

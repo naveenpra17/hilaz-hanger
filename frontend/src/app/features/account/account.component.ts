@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AddressService } from '../../core/services/address.service';
+import { SavedAddress } from '../../core/models/address.model';
 
 @Component({
   selector: 'app-account',
@@ -18,6 +20,31 @@ import { AuthService } from '../../core/services/auth.service';
         <input class="input-field" placeholder="Phone" [(ngModel)]="phone" name="phone" />
         <p class="text-xs text-gray-500">Email: {{ auth.user()?.email }}</p>
         <button type="button" class="btn-secondary" (click)="saveProfile()">Save profile</button>
+      </section>
+
+      <section class="section-card mb-6 space-y-3">
+        <h2 class="font-semibold text-burgundy-800">Saved addresses</h2>
+        @for (a of addresses(); track a.id) {
+          <div class="border border-pink-100 rounded-xl p-3 text-sm">
+            <p class="font-medium">{{ a.label }} @if (a.defaultAddress) { <span class="text-xs text-gold">Default</span> }</p>
+            <p>{{ a.fullName }} · {{ a.phone }}</p>
+            <p class="text-gray-600">{{ a.streetLine }}, {{ a.city }} — {{ a.pincode }}</p>
+            <button type="button" class="text-xs text-red-700 underline mt-2" (click)="deleteAddress(a.id)">Remove</button>
+          </div>
+        }
+        <details class="text-sm">
+          <summary class="cursor-pointer text-burgundy-700 font-medium">Add new address</summary>
+          <div class="mt-3 space-y-2">
+            <input class="input-field" placeholder="Label e.g. Home" [(ngModel)]="addrForm.label" name="al" />
+            <input class="input-field" placeholder="Full name" [(ngModel)]="addrForm.fullName" name="an" />
+            <input class="input-field" placeholder="Phone" [(ngModel)]="addrForm.phone" name="ap" />
+            <input class="input-field" placeholder="Street" [(ngModel)]="addrForm.streetLine" name="as" />
+            <input class="input-field" placeholder="City" [(ngModel)]="addrForm.city" name="ac" />
+            <input class="input-field" placeholder="Pincode" [(ngModel)]="addrForm.pincode" name="az" />
+            <label class="flex items-center gap-2"><input type="checkbox" [(ngModel)]="addrForm.defaultAddress" name="ad" /> Default</label>
+            <button type="button" class="btn-secondary" (click)="saveAddress()">Save address</button>
+          </div>
+        </details>
       </section>
 
       <section class="section-card mb-6 space-y-3">
@@ -42,6 +69,18 @@ import { AuthService } from '../../core/services/auth.service';
 export class AccountComponent implements OnInit {
   readonly auth = inject(AuthService);
   private userService = inject(UserService);
+  private addressService = inject(AddressService);
+
+  readonly addresses = signal<SavedAddress[]>([]);
+  addrForm = {
+    label: 'Home',
+    fullName: '',
+    phone: '',
+    streetLine: '',
+    city: 'Coimbatore',
+    pincode: '',
+    defaultAddress: true,
+  };
 
   fullName = '';
   phone = '';
@@ -59,7 +98,29 @@ export class AccountComponent implements OnInit {
     this.userService.getProfile().subscribe((p) => {
       this.fullName = p.fullName;
       this.phone = p.phone ?? '';
+      this.addrForm.fullName = p.fullName;
+      this.addrForm.phone = p.phone ?? '';
     });
+    this.loadAddresses();
+  }
+
+  loadAddresses(): void {
+    this.addressService.list().subscribe((list) => this.addresses.set(list));
+  }
+
+  saveAddress(): void {
+    this.addressService.create(this.addrForm).subscribe({
+      next: () => {
+        this.loadAddresses();
+        this.message.set('Address saved.');
+        this.success.set(true);
+      },
+      error: () => this.message.set('Could not save address.'),
+    });
+  }
+
+  deleteAddress(id: string): void {
+    this.addressService.delete(id).subscribe(() => this.loadAddresses());
   }
 
   saveProfile(): void {

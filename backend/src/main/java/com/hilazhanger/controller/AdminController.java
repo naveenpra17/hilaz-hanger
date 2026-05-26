@@ -4,6 +4,8 @@ import com.hilazhanger.domain.enums.OrderStatus;
 import com.hilazhanger.dto.CouponDtos;
 import com.hilazhanger.dto.OrderDtos;
 import com.hilazhanger.dto.UploadDtos;
+import com.hilazhanger.dto.CategoryDtos;
+import com.hilazhanger.service.CategoryService;
 import com.hilazhanger.service.CloudinaryService;
 import com.hilazhanger.service.CouponService;
 import com.hilazhanger.service.OrderService;
@@ -22,11 +24,18 @@ public class AdminController {
     private final OrderService orderService;
     private final CloudinaryService cloudinaryService;
     private final CouponService couponService;
+    private final CategoryService categoryService;
 
-    public AdminController(OrderService orderService, CloudinaryService cloudinaryService, CouponService couponService) {
+    public AdminController(
+            OrderService orderService,
+            CloudinaryService cloudinaryService,
+            CouponService couponService,
+            CategoryService categoryService
+    ) {
         this.orderService = orderService;
         this.cloudinaryService = cloudinaryService;
         this.couponService = couponService;
+        this.categoryService = categoryService;
     }
 
     @GetMapping("/dashboard")
@@ -72,6 +81,26 @@ public class AdminController {
     @DeleteMapping("/coupons/{id}")
     public void deleteCoupon(@PathVariable UUID id) {
         couponService.delete(id);
+    }
+
+    @GetMapping("/categories")
+    public List<CategoryDtos.CategoryDto> categories() {
+        return categoryService.listAll();
+    }
+
+    @PostMapping("/categories")
+    public CategoryDtos.CategoryDto createCategory(@Valid @RequestBody CategoryDtos.CategoryRequest request) {
+        return categoryService.create(request);
+    }
+
+    @PutMapping("/categories/{id}")
+    public CategoryDtos.CategoryDto updateCategory(@PathVariable UUID id, @Valid @RequestBody CategoryDtos.CategoryRequest request) {
+        return categoryService.update(id, request);
+    }
+
+    @DeleteMapping("/categories/{id}")
+    public void deleteCategory(@PathVariable UUID id) {
+        categoryService.delete(id);
     }
 
     @PostMapping(value = "/upload/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

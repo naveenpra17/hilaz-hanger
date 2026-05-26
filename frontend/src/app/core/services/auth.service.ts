@@ -35,6 +35,14 @@ export class AuthService {
     );
   }
 
+  forgotPassword(email: string) {
+    return this.http.post<{ message: string }>(`${this.api}/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post<{ message: string }>(`${this.api}/reset-password`, { token, newPassword });
+  }
+
   setDemoAdmin(): void {
     const user: User = {
       id: 'admin-demo',

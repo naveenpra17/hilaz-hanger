@@ -104,9 +104,8 @@ export class CouponsComponent implements OnInit {
       discountType: this.form.discountType,
       discountValue: this.form.discountValue,
       minOrderAmount: this.form.minOrderAmount,
-      maxUses: this.form.maxUses || null,
+      maxUses: this.form.maxUses,
       active: this.form.active,
-      expiresAt: null,
     };
     const req = id ? this.couponService.update(id, body) : this.couponService.create(body);
     req.subscribe({

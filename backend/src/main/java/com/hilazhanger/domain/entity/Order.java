@@ -68,8 +68,26 @@ public class Order {
     @Column(name = "coupon_code", length = 50)
     private String couponCode;
 
+    @Column(name = "taxable_amount", precision = 10, scale = 2)
+    private BigDecimal taxableAmount;
+
+    @Column(name = "tax_rate", precision = 5, scale = 2)
+    private BigDecimal taxRate;
+
+    @Column(name = "tax_amount", precision = 10, scale = 2)
+    private BigDecimal taxAmount;
+
+    @Column(name = "cgst_amount", precision = 10, scale = 2)
+    private BigDecimal cgstAmount;
+
+    @Column(name = "sgst_amount", precision = 10, scale = 2)
+    private BigDecimal sgstAmount;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
+
+    @Column(name = "razorpay_refund_id", length = 100)
+    private String razorpayRefundId;
 
     @Column(name = "shipping_street", nullable = false)
     private String shippingStreet;
