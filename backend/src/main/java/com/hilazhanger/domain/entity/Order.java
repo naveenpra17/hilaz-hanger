@@ -89,6 +89,12 @@ public class Order {
     @Column(name = "razorpay_refund_id", length = 100)
     private String razorpayRefundId;
 
+    @Column(name = "tracking_number", length = 100)
+    private String trackingNumber;
+
+    @Column(name = "courier_name", length = 80)
+    private String courierName;
+
     @Column(name = "shipping_street", nullable = false)
     private String shippingStreet;
 

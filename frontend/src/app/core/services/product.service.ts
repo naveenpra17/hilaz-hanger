@@ -18,6 +18,7 @@ export class ProductService {
     size?: number;
     search?: string;
     filter?: string;
+    sort?: string;
     category?: string;
   } = {}): Observable<ProductPage> {
     if (this.useMock) {

@@ -62,6 +62,11 @@ public class OrderController {
         return orderService.verifyPayment(request);
     }
 
+    @PostMapping("/track")
+    public OrderDtos.OrderTrackingDto track(@Valid @RequestBody OrderDtos.TrackOrderRequest request) {
+        return orderService.trackOrder(request);
+    }
+
     @GetMapping("/{id}/invoice")
     public ResponseEntity<byte[]> invoice(Authentication auth, @PathVariable UUID id) {
         AuthDtos.UserDto user = loadUser(auth);

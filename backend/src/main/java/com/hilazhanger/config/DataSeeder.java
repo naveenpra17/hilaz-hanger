@@ -3,6 +3,7 @@ package com.hilazhanger.config;
 import com.hilazhanger.domain.entity.User;
 import com.hilazhanger.domain.enums.UserRole;
 import com.hilazhanger.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,10 +13,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class DataSeeder {
 
     @Bean
-    CommandLineRunner seedUsers(UserRepository userRepository, PasswordEncoder encoder) {
+    CommandLineRunner seedUsers(
+            UserRepository userRepository,
+            PasswordEncoder encoder,
+            @Value("${app.seed.admin-email:}") String adminEmail,
+            @Value("${app.seed.admin-password:}") String adminPassword
+    ) {
         return args -> {
-            seedIfMissing(userRepository, encoder, "admin@hilazhanger.com", "Admin", "Admin@123", UserRole.ADMIN);
-            seedIfMissing(userRepository, encoder, "customer@hilazhanger.com", "Customer", "Customer@123", UserRole.CUSTOMER);
+            if (adminEmail != null && !adminEmail.isBlank()
+                    && adminPassword != null && !adminPassword.isBlank()) {
+                seedIfMissing(userRepository, encoder, adminEmail, "Admin", adminPassword, UserRole.ADMIN);
+            }
         };
     }
 

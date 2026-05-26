@@ -3,9 +3,11 @@ package com.hilazhanger.dto;
 import com.hilazhanger.domain.enums.OrderSource;
 import com.hilazhanger.domain.enums.OrderStatus;
 import com.hilazhanger.domain.enums.PaymentStatus;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -53,8 +55,25 @@ public final class OrderDtos {
             boolean paid,
             boolean delivered,
             String couponCode,
+            String trackingNumber,
+            String courierName,
             List<OrderItemDto> items,
             Instant createdAt
+    ) {}
+
+    public record OrderTrackingDto(
+            String orderNumber,
+            OrderStatus status,
+            boolean paid,
+            boolean delivered,
+            String trackingNumber,
+            String courierName,
+            Instant createdAt
+    ) {}
+
+    public record TrackOrderRequest(
+            @Email @NotBlank String email,
+            @NotBlank String orderNumber
     ) {}
 
     public record CheckoutItemRequest(
@@ -66,7 +85,7 @@ public final class OrderDtos {
             @NotEmpty List<CheckoutItemRequest> items,
             @NotBlank String shippingStreet,
             @NotBlank String shippingCity,
-            @NotBlank String shippingPincode,
+            @NotBlank @Pattern(regexp = "^\\d{6}$", message = "Enter a valid 6-digit pincode") String shippingPincode,
             BigDecimal shippingPrice,
             BigDecimal discount,
             String couponCode,
@@ -75,17 +94,19 @@ public final class OrderDtos {
     ) {}
 
     public record UpdateOrderStatusRequest(
-            @NotNull OrderStatus status
+            @NotNull OrderStatus status,
+            String trackingNumber,
+            String courierName
     ) {}
 
     public record GuestCheckoutRequest(
             @NotBlank String customerName,
-            @NotBlank String customerEmail,
-            @NotBlank String customerPhone,
+            @Email @NotBlank String customerEmail,
+            @NotBlank @Pattern(regexp = "^[6-9]\\d{9}$", message = "Enter a valid 10-digit Indian mobile number") String customerPhone,
             @NotEmpty List<CheckoutItemRequest> items,
             @NotBlank String shippingStreet,
             @NotBlank String shippingCity,
-            @NotBlank String shippingPincode,
+            @NotBlank @Pattern(regexp = "^\\d{6}$", message = "Enter a valid 6-digit pincode") String shippingPincode,
             BigDecimal shippingPrice,
             BigDecimal discount,
             String couponCode,
@@ -116,7 +137,7 @@ public final class OrderDtos {
             @NotEmpty List<CheckoutItemRequest> items,
             @NotBlank String shippingStreet,
             @NotBlank String shippingCity,
-            @NotBlank String shippingPincode,
+            @NotBlank @Pattern(regexp = "^\\d{6}$", message = "Enter a valid 6-digit pincode") String shippingPincode,
             BigDecimal shippingPrice,
             BigDecimal discount,
             @NotBlank String paymentMethod,

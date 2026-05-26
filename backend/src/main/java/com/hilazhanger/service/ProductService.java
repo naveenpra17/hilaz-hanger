@@ -9,6 +9,7 @@ import com.hilazhanger.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +33,9 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public ProductDtos.ProductPageDto list(String search, String categorySlug, String filter, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public ProductDtos.ProductPageDto list(String search, String categorySlug, String filter, String sort, int page, int size) {
+        Sort sortSpec = resolveSort(sort);
+        Pageable pageable = sortSpec != null ? PageRequest.of(page, size, sortSpec) : PageRequest.of(page, size);
         String term = blankToNull(search);
         UUID categoryId = resolveCategoryId(categorySlug);
         Page<Product> result;
@@ -50,7 +52,7 @@ public class ProductService {
         } else if ("active".equals(filter)) {
             result = productRepository.findByActiveTrue(pageable);
         } else {
-            result = productRepository.findAll(pageable);
+            result = productRepository.findByActiveTrue(pageable);
         }
         List<UUID> ids = result.getContent().stream().map(Product::getId).toList();
         Map<UUID, Product> loaded = ids.isEmpty()
@@ -235,8 +237,22 @@ public class ProductService {
                         .toList(),
                 totalStock,
                 p.getMetaTitle(),
-                p.getMetaDescription()
+                p.getMetaDescription(),
+                p.getRatingAvg(),
+                p.getReviewCount() != null ? p.getReviewCount() : 0
         );
+    }
+
+    private Sort resolveSort(String sort) {
+        if (sort == null || sort.isBlank()) {
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        return switch (sort) {
+            case "price-asc" -> Sort.by(Sort.Direction.ASC, "price");
+            case "price-desc" -> Sort.by(Sort.Direction.DESC, "price");
+            case "name" -> Sort.by(Sort.Direction.ASC, "name");
+            default -> Sort.by(Sort.Direction.DESC, "createdAt");
+        };
     }
 
     private UUID resolveCategoryId(String categorySlug) {

@@ -22,10 +22,11 @@ public class ProductController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String filter,
+            @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return productService.list(search, category, filter, page, size);
+        return productService.list(search, category, filter, sort, page, size);
     }
 
     @GetMapping("/{id}/related")

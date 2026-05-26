@@ -14,7 +14,21 @@ import { Order } from '../../core/models/order.model';
         <a routerLink="/orders" class="text-sm text-burgundy-600 mb-4 inline-block">← My orders</a>
         <h1 class="font-serif text-2xl font-bold">{{ o.orderNumber }}</h1>
         <p class="text-sm text-gray-500">{{ o.createdAt | date: 'medium' }}</p>
-        <p class="mt-2"><span class="text-xs px-2 py-1 rounded-full bg-burgundy-100">{{ o.status }}</span></p>
+        <p class="mt-2"><span class="text-xs px-2 py-1 rounded-full bg-burgundy-100 uppercase">{{ o.status }}</span></p>
+
+        <ol class="section-card mt-4 space-y-2 text-sm">
+          @for (step of timelineSteps(o); track step.label) {
+            <li class="flex items-center gap-3" [class.opacity-40]="!step.done">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0"
+                [class.bg-green-600]="step.done" [class.text-white]="step.done"
+                [class.bg-gray-200]="!step.done">{{ step.done ? '✓' : '·' }}</span>
+              <span>{{ step.label }}</span>
+            </li>
+          }
+        </ol>
+        @if (o.trackingNumber) {
+          <p class="text-sm mt-3">Tracking: <span class="font-mono">{{ o.courierName ? o.courierName + ' — ' : '' }}{{ o.trackingNumber }}</span></p>
+        }
         <ul class="section-card mt-6 space-y-2 text-sm">
           @for (item of o.items; track item.id) {
             <li class="flex justify-between"><span>{{ item.productName }} × {{ item.quantity }}</span><span>₹{{ item.lineTotal }}</span></li>
@@ -44,6 +58,15 @@ export class OrderDetailComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.orderService.getOrder(id).subscribe((o) => this.order.set(o));
+  }
+
+  timelineSteps(o: Order): { label: string; done: boolean }[] {
+    return [
+      { label: 'Order placed', done: true },
+      { label: 'Confirmed / paid', done: o.paid },
+      { label: 'Shipped', done: o.status === 'SHIPPED' || o.status === 'DELIVERED' },
+      { label: 'Delivered', done: o.delivered || o.status === 'DELIVERED' },
+    ];
   }
 
   downloadInvoice(orderId: string): void {

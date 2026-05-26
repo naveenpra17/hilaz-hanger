@@ -43,15 +43,16 @@ import { Category } from '../../core/models/category.model';
         (ngModelChange)="load()"
       />
 
-      <div class="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-1">
-        @for (f of filters; track f.id) {
+      <div class="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-1 items-center">
+        <span class="text-xs text-gray-500 mr-1">Sort:</span>
+        @for (s of sortOptions; track s.id) {
           <button
             type="button"
             class="chip"
-            [class.chip-active]="activeFilter() === f.id"
-            [class.chip-inactive]="activeFilter() !== f.id"
-            (click)="setFilter(f.id)"
-          >{{ f.label }}</button>
+            [class.chip-active]="sort === s.id"
+            [class.chip-inactive]="sort !== s.id"
+            (click)="setSort(s.id)"
+          >{{ s.label }}</button>
         }
       </div>
 
@@ -83,18 +84,19 @@ export class ShopComponent implements OnInit {
   private readonly router = inject(Router);
 
   search = '';
-  readonly activeFilter = signal('all');
   readonly activeCategory = signal<string | null>(null);
   readonly page = signal<ProductPage | null>(null);
   readonly categories = signal<Category[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
 
-  readonly filters = [
-    { id: 'all', label: 'All' },
-    { id: 'low-stock', label: 'Low Stock' },
-    { id: 'active', label: 'Active' },
+  readonly sortOptions = [
+    { id: '', label: 'Newest' },
+    { id: 'price-asc', label: 'Price: Low to High' },
+    { id: 'price-desc', label: 'Price: High to Low' },
+    { id: 'name', label: 'Name A–Z' },
   ];
+  sort = '';
 
   ngOnInit(): void {
     this.categoryService.getCategories().subscribe((c) => this.categories.set(c));
@@ -111,7 +113,7 @@ export class ShopComponent implements OnInit {
     this.productService
       .getProducts({
         search: this.search,
-        filter: this.activeFilter() === 'all' ? undefined : this.activeFilter(),
+        sort: this.sort || undefined,
         category: this.activeCategory() ?? undefined,
         size: 20,
       })
@@ -132,8 +134,8 @@ export class ShopComponent implements OnInit {
       });
   }
 
-  setFilter(id: string): void {
-    this.activeFilter.set(id);
+  setSort(id: string): void {
+    this.sort = id;
     this.load();
   }
 }

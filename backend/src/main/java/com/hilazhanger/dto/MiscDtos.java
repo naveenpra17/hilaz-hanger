@@ -22,4 +22,14 @@ public final class MiscDtos {
     public record NewsletterResponse(String message) {}
 
     public record ShippingQuoteResponse(BigDecimal shippingPrice, String description) {}
+
+    public record StoreConfigResponse(
+            String storeName,
+            String phone,
+            String email,
+            String whatsappNumber,
+            String whatsappMessage,
+            String instagramUrl,
+            String address
+    ) {}
 }

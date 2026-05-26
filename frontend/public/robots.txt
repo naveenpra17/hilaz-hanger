@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 
+Sitemap: https://hilaz-hanger.vercel.app/sitemap.xml
 Sitemap: https://hilaz-hanger-api.onrender.com/api/sitemap.xml

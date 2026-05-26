@@ -9,6 +9,7 @@ import {
   CreateOfflineOrderRequest,
   DashboardStats,
   Order,
+  OrderTracking,
   VerifyPaymentRequest,
 } from '../models/order.model';
 import { MOCK_ORDERS, MOCK_DASHBOARD } from '../data/mock-orders';
@@ -116,10 +117,18 @@ export class OrderService {
       .pipe(map((orders) => orders.map((o) => this.normalizeOrder(o))));
   }
 
-  updateStatus(orderId: string, status: Order['status']): Observable<Order> {
+  updateStatus(
+    orderId: string,
+    status: Order['status'],
+    tracking?: { trackingNumber?: string; courierName?: string }
+  ): Observable<Order> {
     return this.http
-      .patch<Order>(`${this.api}/admin/orders/${orderId}/status`, { status })
+      .patch<Order>(`${this.api}/admin/orders/${orderId}/status`, { status, ...tracking })
       .pipe(map((o) => this.normalizeOrder(o)));
+  }
+
+  trackOrder(email: string, orderNumber: string): Observable<OrderTracking> {
+    return this.http.post<OrderTracking>(`${this.api}/orders/track`, { email, orderNumber });
   }
 
   downloadInvoice(orderId: string): Observable<Blob> {

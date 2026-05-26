@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     Optional<Order> findByRazorpayOrderId(String razorpayOrderId);
+
+    Optional<Order> findByOrderNumberIgnoreCase(String orderNumber);
     List<Order> findTop10ByOrderByCreatedAtDesc();
     List<Order> findAllByOrderByCreatedAtDesc();
 

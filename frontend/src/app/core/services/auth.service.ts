@@ -43,19 +43,6 @@ export class AuthService {
     return this.http.post<{ message: string }>(`${this.api}/reset-password`, { token, newPassword });
   }
 
-  setDemoAdmin(): void {
-    const user: User = {
-      id: 'admin-demo',
-      email: 'admin@hilazhanger.com',
-      fullName: 'Admin',
-      role: 'ADMIN',
-    };
-    localStorage.setItem(TOKEN_KEY, 'demo');
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-    this.token.set('demo');
-    this.userSignal.set(user);
-  }
-
   private normalizeResponse(res: AuthResponse): AuthResponse {
     return {
       ...res,

@@ -22,7 +22,10 @@ import { AuthService } from '../../core/services/auth.service';
       } @else {
         <div class="responsive-grid-products mt-6">
           @for (p of items(); track p.id) {
-            <app-product-card [product]="p" />
+            <div class="relative">
+              <app-product-card [product]="p" />
+              <button type="button" class="absolute top-2 right-2 bg-white/90 text-xs px-2 py-1 rounded-lg shadow" (click)="remove(p.id)">Remove</button>
+            </div>
           }
         </div>
       }
@@ -46,6 +49,12 @@ export class SavedComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  remove(productId: string): void {
+    this.wishlist.remove(productId).subscribe(() => {
+      this.items.update((list) => list.filter((p) => p.id !== productId));
     });
   }
 }

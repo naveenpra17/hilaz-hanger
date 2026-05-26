@@ -6,11 +6,12 @@ import { PromoBarComponent } from '../../shared/components/promo-bar/promo-bar.c
 import { SiteHeaderComponent } from '../../shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from '../../shared/components/site-footer/site-footer.component';
 import { BottomNavComponent } from '../../shared/components/bottom-nav/bottom-nav.component';
+import { WhatsappChatComponent } from '../../shared/components/whatsapp-chat/whatsapp-chat.component';
 
 @Component({
   selector: 'app-customer-layout',
   standalone: true,
-  imports: [RouterOutlet, PromoBarComponent, SiteHeaderComponent, SiteFooterComponent, BottomNavComponent],
+  imports: [RouterOutlet, PromoBarComponent, SiteHeaderComponent, SiteFooterComponent, BottomNavComponent, WhatsappChatComponent],
   template: `
     <div class="min-h-screen flex flex-col bg-cream">
       <app-promo-bar />
@@ -19,6 +20,7 @@ import { BottomNavComponent } from '../../shared/components/bottom-nav/bottom-na
         <router-outlet />
       </main>
       <app-site-footer />
+      <app-whatsapp-chat />
       <app-bottom-nav />
     </div>
   `,

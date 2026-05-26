@@ -248,7 +248,7 @@ export class CheckoutComponent implements OnInit {
     order$.subscribe({
       next: async (res) => {
         if (!res.requiresPayment) {
-          this.complete(res.order.orderNumber);
+          this.complete(res.order.orderNumber, res.order.id);
           return;
         }
         if (!res.razorpayOrderId || !this.paymentService.isConfigured(res.razorpayKeyId)) {
@@ -277,7 +277,7 @@ export class CheckoutComponent implements OnInit {
                   razorpaySignature: rzpRes.razorpay_signature,
                 })
                 .subscribe({
-                  next: () => this.complete(res.order.orderNumber),
+                  next: () => this.complete(res.order.orderNumber, res.order.id),
                   error: () => {
                     this.error.set('Payment received but verification failed. Contact support.');
                     this.loading.set(false);
@@ -302,10 +302,17 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
-  private complete(orderNumber: string): void {
+  private complete(orderNumber: string, orderId?: string): void {
     this.cart.clear();
-    this.success.set(`Order ${orderNumber} placed successfully!`);
     this.loading.set(false);
-    setTimeout(() => this.router.navigate(['/orders']), 2500);
+    const guest = !this.auth.isLoggedIn();
+    this.router.navigate(['/order-confirmation'], {
+      queryParams: {
+        order: orderNumber,
+        email: guest ? this.guestEmail : this.auth.user()?.email,
+        guest: guest ? '1' : '0',
+        id: orderId,
+      },
+    });
   }
 }

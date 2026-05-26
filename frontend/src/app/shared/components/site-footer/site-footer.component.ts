@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { StoreService } from '../../../core/services/store.service';
+import { StoreConfigService } from '../../../core/services/store-config.service';
 
 @Component({
   selector: 'app-site-footer',
@@ -13,8 +14,8 @@ import { StoreService } from '../../../core/services/store.service';
         <div class="w-14 h-14 rounded-full bg-white mx-auto flex items-center justify-center text-burgundy-800 font-serif font-bold text-xl mb-3">H</div>
         <p class="text-sm text-white/90 mb-4">Your one-stop destination for premium fashion.</p>
         <div class="flex justify-center gap-3 mb-8">
-          <a href="https://instagram.com" target="_blank" rel="noopener" class="w-10 h-10 rounded-lg border border-white/30 flex items-center justify-center hover:bg-white/10">IG</a>
-          <a href="https://wa.me" target="_blank" rel="noopener" class="w-10 h-10 rounded-lg border border-white/30 flex items-center justify-center hover:bg-white/10">WA</a>
+          <a [href]="store.instagramUrl()" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg border border-white/30 flex items-center justify-center hover:bg-white/10" aria-label="Instagram">IG</a>
+          <a [href]="store.whatsappUrl()" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg border border-white/30 flex items-center justify-center hover:bg-white/10" aria-label="WhatsApp">WA</a>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left text-sm mb-8">
@@ -24,6 +25,7 @@ import { StoreService } from '../../../core/services/store.service';
               <li><a routerLink="/page/faq" class="hover:text-white">FAQ</a></li>
               <li><a routerLink="/page/returns" class="hover:text-white">Return & Exchange</a></li>
               <li><a routerLink="/page/shipping" class="hover:text-white">Shipping</a></li>
+              <li><a routerLink="/track-order" class="hover:text-white">Track order</a></li>
               <li><a routerLink="/contact" class="hover:text-white">Contact</a></li>
             </ul>
           </div>
@@ -37,9 +39,9 @@ import { StoreService } from '../../../core/services/store.service';
           </div>
           <div class="bg-white/5 rounded-xl p-4">
             <h4 class="font-semibold mb-2 text-gold-light">Contact</h4>
-            <p class="text-white/80 text-xs leading-relaxed">📍 Coimbatore, India</p>
-            <p class="text-white/80 text-xs">✉ hello&#64;hilazhanger.com</p>
-            <p class="text-white/80 text-xs">📞 +91 98765 43210</p>
+            <p class="text-white/80 text-xs leading-relaxed">📍 {{ store.config()?.address ?? 'Coimbatore, India' }}</p>
+            <p class="text-white/80 text-xs">✉ {{ store.config()?.email }}</p>
+            <p class="text-white/80 text-xs">📞 {{ store.config()?.phone }}</p>
           </div>
         </div>
 
@@ -50,19 +52,20 @@ import { StoreService } from '../../../core/services/store.service';
         @if (newsletterMsg()) {
           <p class="text-xs text-gold-light mb-4">{{ newsletterMsg() }}</p>
         }
-        <p class="text-xs text-white/60">© Hilaz Hanger 2024 — All Rights Reserved</p>
+        <p class="text-xs text-white/60">© Hilaz Hanger {{ year }} — All Rights Reserved</p>
       </div>
-      <a href="https://wa.me" class="fixed bottom-20 right-4 lg:bottom-6 w-12 h-12 bg-burgundy-900 rounded-full shadow-lg flex items-center justify-center text-white text-xl z-30" aria-label="Chat">💬</a>
     </footer>
   `,
 })
 export class SiteFooterComponent {
-  private store = inject(StoreService);
+  private storeApi = inject(StoreService);
+  readonly store = inject(StoreConfigService);
   newsletterEmail = '';
   readonly newsletterMsg = signal('');
+  readonly year = new Date().getFullYear();
 
   subscribe(): void {
-    this.store.subscribeNewsletter(this.newsletterEmail).subscribe({
+    this.storeApi.subscribeNewsletter(this.newsletterEmail).subscribe({
       next: (r) => {
         this.newsletterMsg.set(r.message);
         this.newsletterEmail = '';

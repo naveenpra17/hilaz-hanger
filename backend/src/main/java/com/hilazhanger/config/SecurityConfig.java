@@ -26,12 +26,20 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
+    private final SecurityHeadersFilter securityHeadersFilter;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(
+            JwtAuthFilter jwtAuthFilter,
+            RateLimitFilter rateLimitFilter,
+            SecurityHeadersFilter securityHeadersFilter
+    ) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.rateLimitFilter = rateLimitFilter;
+        this.securityHeadersFilter = securityHeadersFilter;
     }
 
     @Bean
@@ -44,7 +52,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/webhooks/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/forgot-password", "/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.GET, "/sitemap.xml").permitAll()
-                .requestMatchers(HttpMethod.POST, "/orders/guest-checkout", "/orders/verify-payment").permitAll()
+                .requestMatchers(HttpMethod.POST, "/orders/guest-checkout", "/orders/verify-payment", "/orders/track").permitAll()
+                .requestMatchers(HttpMethod.GET, "/store/config").permitAll()
                 .requestMatchers(HttpMethod.POST, "/contact", "/newsletter/subscribe").permitAll()
                 .requestMatchers(HttpMethod.GET, "/shipping/quote").permitAll()
                 .requestMatchers(HttpMethod.GET, "/reviews/product/**").permitAll()
@@ -59,6 +68,8 @@ public class SecurityConfig {
                 // Everything else public (fixes GET /products 403 on Render)
                 .anyRequest().permitAll()
             )
+            .addFilterBefore(securityHeadersFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

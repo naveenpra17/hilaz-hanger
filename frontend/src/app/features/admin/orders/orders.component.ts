@@ -211,7 +211,15 @@ export class OrdersComponent implements OnInit {
   setStatus(orderId: string, status: Order['status']): void {
     const label = status === 'CANCELLED' ? 'cancel' : status.toLowerCase();
     if (!confirm(`Mark this order as ${label}?`)) return;
-    this.orderService.updateStatus(orderId, status).subscribe({
+    let tracking: { trackingNumber?: string; courierName?: string } | undefined;
+    if (status === 'SHIPPED') {
+      const trackingNumber = prompt('AWB / tracking number (optional):') ?? undefined;
+      const courierName = prompt('Courier name e.g. Delhivery, Blue Dart (optional):') ?? undefined;
+      if (trackingNumber || courierName) {
+        tracking = { trackingNumber: trackingNumber || undefined, courierName: courierName || undefined };
+      }
+    }
+    this.orderService.updateStatus(orderId, status, tracking).subscribe({
       next: (updated) => {
         this.orders.update((list) => list.map((o) => (o.id === updated.id ? updated : o)));
       },

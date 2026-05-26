@@ -4,6 +4,7 @@ import com.hilazhanger.domain.entity.Order;
 import com.hilazhanger.domain.entity.OrderItem;
 import com.hilazhanger.domain.entity.ProductVariant;
 import com.hilazhanger.domain.enums.*;
+import com.hilazhanger.dto.OrderDtos;
 import com.hilazhanger.repository.OrderRepository;
 import com.hilazhanger.repository.ProductVariantRepository;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,12 @@ class OrderServiceStatusTest {
     CouponService couponService;
     @Mock
     NotificationService notificationService;
+    @Mock
+    ShippingService shippingService;
+    @Mock
+    GstService gstService;
+    @Mock
+    InvoiceService invoiceService;
 
     @InjectMocks
     OrderService orderService;
@@ -45,7 +52,8 @@ class OrderServiceStatusTest {
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var dto = orderService.updateStatus(order.getId(), OrderStatus.SHIPPED);
+        var dto = orderService.updateStatus(order.getId(),
+                new OrderDtos.UpdateOrderStatusRequest(OrderStatus.SHIPPED, null, null));
 
         assertEquals(OrderStatus.SHIPPED, dto.status());
         verify(notificationService).sendOrderStatusUpdate(any());
@@ -71,7 +79,8 @@ class OrderServiceStatusTest {
         when(variantRepository.findById(variantId)).thenReturn(Optional.of(variant));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        orderService.updateStatus(order.getId(), OrderStatus.CANCELLED);
+        orderService.updateStatus(order.getId(),
+                new OrderDtos.UpdateOrderStatusRequest(OrderStatus.CANCELLED, null, null));
 
         assertEquals(5, variant.getStockQuantity());
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
@@ -83,7 +92,8 @@ class OrderServiceStatusTest {
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
 
         assertThrows(ResponseStatusException.class,
-                () -> orderService.updateStatus(order.getId(), OrderStatus.CANCELLED));
+                () -> orderService.updateStatus(order.getId(),
+                        new OrderDtos.UpdateOrderStatusRequest(OrderStatus.CANCELLED, null, null)));
     }
 
     private Order sampleOrder(OrderStatus status) {

@@ -58,6 +58,10 @@ app:
     name: ${APP_STORE_NAME:Hilaz Hanger}
     gstin: ${APP_STORE_GSTIN:}
     address: ${APP_STORE_ADDRESS:Coimbatore, Tamil Nadu, India}
+    phone: ${APP_STORE_PHONE:+919876543210}
+    email: ${APP_STORE_EMAIL:hello@hilazhanger.com}
+    whatsapp: ${APP_STORE_WHATSAPP:+919876543210}
+    instagram: ${APP_STORE_INSTAGRAM:https://www.instagram.com/hilazhanger}
   mail:
     enabled: ${APP_MAIL_ENABLED:false}
     from: ${APP_MAIL_FROM:noreply@hilazhanger.com}

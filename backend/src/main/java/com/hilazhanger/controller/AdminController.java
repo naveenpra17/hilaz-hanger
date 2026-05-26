@@ -60,7 +60,7 @@ public class AdminController {
 
     @PatchMapping("/orders/{id}/status")
     public OrderDtos.OrderDto updateStatus(@PathVariable UUID id, @Valid @RequestBody OrderDtos.UpdateOrderStatusRequest request) {
-        return orderService.updateStatus(id, request.status());
+        return orderService.updateStatus(id, request);
     }
 
     @GetMapping("/coupons")

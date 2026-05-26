@@ -12,6 +12,8 @@ export const routes: Routes = [
       { path: 'product/:slug', loadComponent: () => import('./features/product-detail/product-detail.component').then((m) => m.ProductDetailComponent) },
       { path: 'cart', loadComponent: () => import('./features/cart/cart.component').then((m) => m.CartComponent) },
       { path: 'checkout', loadComponent: () => import('./features/checkout/checkout.component').then((m) => m.CheckoutComponent) },
+      { path: 'order-confirmation', loadComponent: () => import('./features/order-confirmation/order-confirmation.component').then((m) => m.OrderConfirmationComponent) },
+      { path: 'track-order', loadComponent: () => import('./features/track-order/track-order.component').then((m) => m.TrackOrderComponent) },
       { path: 'orders', canActivate: [authGuard], loadComponent: () => import('./features/my-orders/my-orders.component').then((m) => m.MyOrdersComponent) },
       { path: 'orders/:id', canActivate: [authGuard], loadComponent: () => import('./features/order-detail/order-detail.component').then((m) => m.OrderDetailComponent) },
       { path: 'account', canActivate: [authGuard], loadComponent: () => import('./features/account/account.component').then((m) => m.AccountComponent) },

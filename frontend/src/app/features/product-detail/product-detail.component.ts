@@ -50,7 +50,7 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
             <span class="text-gray-400 line-through">₹{{ p.compareAtPrice }}</span>
           }
         </div>
-        <p class="text-sm text-gray-500 mt-1">★★★★★ ({{ p.reviewCount ?? 0 }} reviews)</p>
+        <p class="text-sm text-gray-500 mt-1">{{ ratingLabel(p) }}</p>
 
         @if (p.colors.length) {
           <div class="mt-6">
@@ -78,7 +78,7 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
         <div class="mt-6">
           <div class="flex justify-between items-center mb-2">
             <p class="text-xs font-semibold tracking-wider text-gray-600">SIZE</p>
-            <a href="#" class="text-xs text-burgundy-600 underline">Size Chart</a>
+            <a routerLink="/page/shipping" class="text-xs text-burgundy-600 underline">Size guide</a>
           </div>
           <div class="flex flex-wrap gap-2">
             @for (size of p.sizes; track size) {
@@ -107,8 +107,6 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
           }
         </div>
 
-        <p class="text-xs text-burgundy-500 mt-3 bg-cream-dark inline-block px-2 py-1 rounded">17 people are viewing this right now</p>
-
         <div class="grid grid-cols-1 xs:grid-cols-2 gap-3 mt-6 sticky bottom-[4.5rem] lg:static lg:bottom-auto bg-cream/95 lg:bg-transparent py-3 lg:py-0 -mx-4 px-4 sm:mx-0 sm:px-0 lg:mx-0 border-t border-burgundy-100 lg:border-0 z-30 lg:z-auto">
           <button type="button" class="btn-secondary flex items-center justify-center gap-2 w-full" (click)="addToCart(p)">🛒 Add to Cart</button>
           <button type="button" class="btn-primary w-full" (click)="buyNow(p)">Buy Now</button>
@@ -120,8 +118,11 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
           <div class="flex items-center gap-2 text-gray-600"><span>✓</span> Quality Guaranteed</div>
         </div>
 
-        <div class="flex gap-2 mt-6">
+        <div class="flex gap-2 mt-6 items-center">
           <button type="button" class="btn-secondary text-sm" (click)="toggleWishlist(p)">♡ Save</button>
+          @if (wishlistMsg()) {
+            <span class="text-xs text-green-700">{{ wishlistMsg() }}</span>
+          }
         </div>
 
         <div class="flex border-b border-burgundy-100 mt-8 text-xs sm:text-sm overflow-x-auto">
@@ -173,6 +174,7 @@ export class ProductDetailComponent {
   private wishlistService = inject(WishlistService);
   readonly auth = inject(AuthService);
 
+  readonly wishlistMsg = signal('');
   readonly product = signal<Product | null>(null);
   readonly related = signal<Product[]>([]);
   readonly reviews = signal<Review[]>([]);
@@ -225,7 +227,20 @@ export class ProductDetailComponent {
       this.router.navigate(['/login']);
       return;
     }
-    this.wishlistService.add(p.id).subscribe(() => alert('Saved to wishlist'));
+    this.wishlistService.add(p.id).subscribe({
+      next: () => {
+        this.wishlistMsg.set('Saved to wishlist');
+        setTimeout(() => this.wishlistMsg.set(''), 3000);
+      },
+    });
+  }
+
+  ratingLabel(p: Product): string {
+    const count = p.reviewCount ?? 0;
+    if (count === 0) return 'No reviews yet — be the first!';
+    const avg = Number(p.ratingAvg ?? 0);
+    const filled = Math.min(5, Math.max(0, Math.round(avg)));
+    return `${'★'.repeat(filled)}${'☆'.repeat(5 - filled)} ${avg.toFixed(1)} (${count} reviews)`;
   }
 
   currentImage(): string {

@@ -38,7 +38,9 @@ public final class ProductDtos {
             List<ProductVariantDto> variants,
             Integer totalStock,
             String metaTitle,
-            String metaDescription
+            String metaDescription,
+            BigDecimal ratingAvg,
+            int reviewCount
     ) {}
 
     public record ProductPageDto(

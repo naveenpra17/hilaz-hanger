@@ -25,6 +25,24 @@ public class StoreController {
     @Value("${app.mail.from:noreply@hilazhanger.com}")
     private String mailFrom;
 
+    @Value("${app.store.name:Hilaz Hanger}")
+    private String storeName;
+
+    @Value("${app.store.phone:+919876543210}")
+    private String storePhone;
+
+    @Value("${app.store.email:hello@hilazhanger.com}")
+    private String storeEmail;
+
+    @Value("${app.store.whatsapp:+919876543210}")
+    private String whatsappNumber;
+
+    @Value("${app.store.instagram:https://www.instagram.com/hilazhanger}")
+    private String instagramUrl;
+
+    @Value("${app.store.address:Coimbatore, Tamil Nadu, India}")
+    private String storeAddress;
+
     public StoreController(NewsletterSubscriberRepository newsletterRepository,
                            NotificationService notificationService,
                            ShippingService shippingService) {
@@ -46,6 +64,19 @@ public class StoreController {
             newsletterRepository.save(NewsletterSubscriber.builder().email(email).active(true).build());
         }
         return new MiscDtos.NewsletterResponse("Subscribed! Watch your inbox for offers.");
+    }
+
+    @GetMapping("/store/config")
+    public MiscDtos.StoreConfigResponse storeConfig() {
+        return new MiscDtos.StoreConfigResponse(
+                storeName,
+                storePhone,
+                storeEmail,
+                whatsappNumber,
+                "Hi Hilaz Hanger! I have a question about my order.",
+                instagramUrl,
+                storeAddress
+        );
     }
 
     @GetMapping("/shipping/quote")

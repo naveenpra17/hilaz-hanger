@@ -33,11 +33,6 @@ import { AuthService } from '../../../core/services/auth.service';
         No account? <a routerLink="/register" class="text-burgundy-700 font-medium">Register</a>
       </p>
 
-      <div class="mt-8 p-4 bg-cream-dark rounded-xl text-xs text-gray-600 space-y-2">
-        <p class="font-semibold">Store admin login</p>
-        <p>admin&#64;hilazhanger.com / Admin&#64;123</p>
-        <button type="button" class="text-burgundy-700 underline" (click)="fillAdmin()">Fill admin credentials</button>
-      </div>
     </div>
   `,
 })
@@ -67,8 +62,4 @@ export class LoginComponent {
     });
   }
 
-  fillAdmin(): void {
-    this.email = 'admin@hilazhanger.com';
-    this.password = 'Admin@123';
-  }
 }

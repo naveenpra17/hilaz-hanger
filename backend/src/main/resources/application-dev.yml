@@ -6,3 +6,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/hilaz_hanger
     username: hilaz
     password: hilaz_secret
+
+app:
+  seed:
+    admin-email: admin@hilazhanger.com
+    admin-password: Admin@123

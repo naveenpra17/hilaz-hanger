@@ -41,7 +41,19 @@ export interface Order {
   paid: boolean;
   delivered: boolean;
   couponCode?: string;
+  trackingNumber?: string;
+  courierName?: string;
   items: OrderItem[];
+  createdAt: string;
+}
+
+export interface OrderTracking {
+  orderNumber: string;
+  status: OrderStatus;
+  paid: boolean;
+  delivered: boolean;
+  trackingNumber?: string;
+  courierName?: string;
   createdAt: string;
 }
 

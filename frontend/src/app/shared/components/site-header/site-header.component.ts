@@ -79,9 +79,10 @@ import { Category } from '../../../core/models/category.model';
             </a>
             @if (auth.isLoggedIn()) {
               @if (!auth.isAdmin()) {
-                <a routerLink="/orders" class="hidden sm:inline text-xs hover:text-gold whitespace-nowrap">My Orders</a>
+                <a routerLink="/orders" class="hidden sm:inline text-xs hover:text-gold whitespace-nowrap">Orders</a>
+                <a routerLink="/account" class="hidden md:inline text-xs hover:text-gold whitespace-nowrap">Account</a>
               }
-              <a [routerLink]="auth.isAdmin() ? '/admin' : '/orders'" class="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-gold text-burgundy-900 flex items-center justify-center text-sm font-bold shrink-0" [attr.aria-label]="auth.isAdmin() ? 'Admin' : 'My orders'">
+              <a [routerLink]="auth.isAdmin() ? '/admin' : '/account'" class="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-gold text-burgundy-900 flex items-center justify-center text-sm font-bold shrink-0" [attr.aria-label]="auth.isAdmin() ? 'Admin' : 'Account'">
                 {{ auth.user()?.fullName?.charAt(0) ?? 'H' }}
               </a>
             } @else {
@@ -120,8 +121,12 @@ import { Category } from '../../../core/models/category.model';
               <a routerLink="/saved" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Saved</a>
               @if (auth.isLoggedIn() && !auth.isAdmin()) {
                 <a routerLink="/orders" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center" (click)="menuOpen.set(false)">My Orders</a>
+                <a routerLink="/account" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center" (click)="menuOpen.set(false)">Account</a>
               }
-              <a routerLink="/login" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Profile / Login</a>
+              @if (!auth.isLoggedIn()) {
+                <a routerLink="/login" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center sm:hidden" (click)="menuOpen.set(false)">Login</a>
+              }
+              <a routerLink="/track-order" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center" (click)="menuOpen.set(false)">Track order</a>
               @if (auth.isAdmin()) {
                 <a routerLink="/admin" class="px-3 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center text-gold" (click)="menuOpen.set(false)">Admin Panel</a>
               }

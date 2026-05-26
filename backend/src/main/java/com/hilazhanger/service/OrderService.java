@@ -102,6 +102,9 @@ public class OrderService {
     public OrderDtos.OrderDto verifyPayment(OrderDtos.VerifyPaymentRequest req) {
         Order order = orderRepository.findById(req.orderId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (order.getRazorpayOrderId() != null && !order.getRazorpayOrderId().equals(req.razorpayOrderId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment does not match this order");
+        }
         razorpayService.verifySignature(req.razorpayOrderId(), req.razorpayPaymentId(), req.razorpaySignature());
         return toDto(markPaid(order, req.razorpayPaymentId()));
     }
@@ -216,8 +219,28 @@ public class OrderService {
         return toDto(orderRepository.save(order));
     }
 
+    public OrderDtos.OrderTrackingDto trackOrder(OrderDtos.TrackOrderRequest req) {
+        Order order = orderRepository.findByOrderNumberIgnoreCase(req.orderNumber().trim())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        String email = req.email().trim().toLowerCase();
+        if (order.getCustomerEmail() == null
+                || !order.getCustomerEmail().trim().toLowerCase().equals(email)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+        }
+        return new OrderDtos.OrderTrackingDto(
+                order.getOrderNumber(),
+                order.getStatus(),
+                order.isPaid(),
+                order.isDelivered(),
+                order.getTrackingNumber(),
+                order.getCourierName(),
+                order.getCreatedAt()
+        );
+    }
+
     @Transactional
-    public OrderDtos.OrderDto updateStatus(UUID orderId, OrderStatus newStatus) {
+    public OrderDtos.OrderDto updateStatus(UUID orderId, OrderDtos.UpdateOrderStatusRequest req) {
+        OrderStatus newStatus = req.status();
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -241,6 +264,12 @@ public class OrderService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot ship a cancelled order");
             }
             order.setStatus(OrderStatus.SHIPPED);
+            if (req.trackingNumber() != null && !req.trackingNumber().isBlank()) {
+                order.setTrackingNumber(req.trackingNumber().trim());
+            }
+            if (req.courierName() != null && !req.courierName().isBlank()) {
+                order.setCourierName(req.courierName().trim());
+            }
         } else if (newStatus == OrderStatus.DELIVERED) {
             order.setStatus(OrderStatus.DELIVERED);
             order.setDelivered(true);
@@ -294,20 +323,17 @@ public class OrderService {
             items.add(item);
         }
 
-        BigDecimal shipping = req.shippingPrice() != null && req.shippingPrice().compareTo(BigDecimal.ZERO) > 0
-                ? req.shippingPrice()
-                : shippingService.calculate(subtotal);
         BigDecimal discount = BigDecimal.ZERO;
         String couponCode = null;
 
         if (req.couponCode() != null && !req.couponCode().isBlank()) {
             couponCode = req.couponCode().trim().toUpperCase();
             discount = couponService.applyAndConsume(couponCode, subtotal);
-        } else if (req.discount() != null && req.discount().compareTo(BigDecimal.ZERO) > 0) {
-            discount = req.discount().min(subtotal);
         }
+        // Never trust client-sent discount amounts — coupons only (Flipkart/Amazon model)
 
         BigDecimal taxableBase = subtotal.subtract(discount).max(BigDecimal.ZERO);
+        BigDecimal shipping = shippingService.calculate(taxableBase);
         GstService.GstBreakdown gst = gstService.calculate(taxableBase);
         BigDecimal total = taxableBase.add(gst.taxAmount()).add(shipping).max(BigDecimal.ZERO);
 
@@ -380,6 +406,8 @@ public class OrderService {
                 o.isPaid(),
                 o.isDelivered(),
                 o.getCouponCode(),
+                o.getTrackingNumber(),
+                o.getCourierName(),
                 o.getItems().stream().map(i -> new OrderDtos.OrderItemDto(
                         i.getId(), i.getProductName(), i.getSize(), i.getColorName(),
                         i.getUnitPrice(), i.getQuantity(), i.getLineTotal(), null
