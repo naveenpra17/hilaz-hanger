@@ -90,9 +90,12 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductDtos.ProductDto getBySlug(String slug) {
-        return productRepository.findBySlug(slug)
+        if (slug == null || slug.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product slug is required");
+        }
+        return productRepository.findBySlug(slug.trim())
                 .map(this::toDto)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
     }
 
     @Transactional(readOnly = true)
