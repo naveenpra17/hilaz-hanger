@@ -10,6 +10,7 @@ import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
+import { onImageError, PLACEHOLDER_PRODUCT } from '../../core/constants/media-urls';
 
 @Component({
   selector: 'app-product-detail',
@@ -30,7 +31,12 @@ import { ProductCardComponent } from '../../shared/components/product-card/produ
 
         <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12 lg:items-start">
         <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-carousel mb-4 lg:mb-0 lg:sticky lg:top-24">
-          <img [src]="currentImage()" [alt]="p.name" class="w-full aspect-square sm:aspect-[4/5] lg:aspect-square object-cover" />
+          <img
+            [src]="currentImage()"
+            [alt]="p.name"
+            class="w-full aspect-square sm:aspect-[4/5] lg:aspect-square object-cover"
+            (error)="onImageError($event)"
+          />
           @for (label of p.labels; track label) {
             <span class="absolute top-3 right-3 bg-burgundy-800 text-white text-xs font-bold px-2 py-1 rounded uppercase">{{ label }}</span>
           }
@@ -197,6 +203,7 @@ export class ProductDetailComponent {
   readonly selectedSize = signal<string | null>(null);
   readonly selectedColor = signal<ProductColor | null>(null);
   readonly qty = signal(1);
+  readonly onImageError = onImageError;
 
   private seo = inject(SeoService);
 
@@ -268,8 +275,8 @@ export class ProductDetailComponent {
 
   currentImage(): string {
     const p = this.product();
-    if (!p?.images.length) return '';
-    return p.images[this.imageIndex()]?.url ?? p.images[0].url;
+    if (!p?.images?.length) return PLACEHOLDER_PRODUCT;
+    return p.images[this.imageIndex()]?.url ?? p.images[0]?.url ?? PLACEHOLDER_PRODUCT;
   }
 
   prevImage(p: Product): void {

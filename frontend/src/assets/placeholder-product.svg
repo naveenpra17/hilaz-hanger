@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c1a2e"/>
+      <stop offset="100%" style="stop-color:#8b2942"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <text x="450" y="580" text-anchor="middle" fill="#f5e6c8" font-family="Georgia, serif" font-size="42">Hilaz Hanger</text>
+  <text x="450" y="640" text-anchor="middle" fill="#f5e6c8" opacity="0.85" font-family="system-ui, sans-serif" font-size="22">Premium Fashion</text>
+</svg>

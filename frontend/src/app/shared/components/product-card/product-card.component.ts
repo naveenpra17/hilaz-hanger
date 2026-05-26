@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
+import { onImageError, PLACEHOLDER_PRODUCT } from '../../../core/constants/media-urls';
 
 @Component({
   selector: 'app-product-card',
@@ -9,7 +10,13 @@ import { Product } from '../../../core/models/product.model';
   template: `
     <a [routerLink]="['/product', product().id]" class="block bg-white rounded-2xl shadow-card overflow-hidden hover:shadow-lg transition-shadow group">
       <div class="aspect-[3/4] relative overflow-hidden">
-        <img [src]="primaryImage()" [alt]="product().name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        <img
+          [src]="primaryImage()"
+          [alt]="product().name"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+          (error)="onImageError($event)"
+        />
         @for (label of product().labels.slice(0, 1); track label) {
           <span class="absolute top-2 left-2 bg-burgundy-800 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">{{ label }}</span>
         }
@@ -31,10 +38,11 @@ import { Product } from '../../../core/models/product.model';
 })
 export class ProductCardComponent {
   readonly product = input.required<Product>();
+  readonly onImageError = onImageError;
 
   primaryImage(): string {
     const p = this.product();
     const url = p.images?.find((i) => i.isPrimary)?.url ?? p.images?.[0]?.url ?? '';
-    return url || 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600';
+    return url || PLACEHOLDER_PRODUCT;
   }
 }

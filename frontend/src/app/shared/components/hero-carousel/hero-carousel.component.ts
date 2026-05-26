@@ -1,6 +1,7 @@
 import { Component, signal, OnDestroy, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HERO_SLIDES, onImageError } from '../../../core/constants/media-urls';
 
 interface Slide {
   image: string;
@@ -16,7 +17,12 @@ interface Slide {
   template: `
     <div class="relative mt-3 sm:mt-4 page-container rounded-xl sm:rounded-2xl overflow-hidden shadow-carousel">
       <div class="aspect-[4/3] sm:aspect-[5/3] md:aspect-[16/9] lg:aspect-[21/9] relative">
-        <img [src]="slides[current()].image" [alt]="slides[current()].title" class="w-full h-full object-cover" />
+        <img
+          [src]="slides[current()].image"
+          [alt]="slides[current()].title"
+          class="w-full h-full object-cover"
+          (error)="onImageError($event)"
+        />
         <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
         <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
           <p class="text-gold text-xs font-semibold tracking-wider uppercase">{{ slides[current()].title }}</p>
@@ -46,20 +52,8 @@ interface Slide {
 })
 export class HeroCarouselComponent implements OnInit, OnDestroy {
   readonly String = String;
-  readonly slides: Slide[] = [
-    {
-      image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900',
-      title: 'Special Offer',
-      subtitle: 'Buy 3 OR MORE ITEMS & Receive 10% OFF',
-      tagline: 'Where fantasy unfolds',
-    },
-    {
-      image: 'https://images.unsplash.com/photo-1469334031218-e42a4046a404?w=900',
-      title: 'New Collection',
-      subtitle: 'Premium Mulmul & Silk Sets',
-      tagline: 'Elevate your everyday elegance',
-    },
-  ];
+  readonly onImageError = onImageError;
+  readonly slides: Slide[] = [...HERO_SLIDES];
   readonly current = signal(0);
   private timer?: ReturnType<typeof setInterval>;
 
