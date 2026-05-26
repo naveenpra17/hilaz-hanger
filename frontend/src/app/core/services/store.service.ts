@@ -22,4 +22,8 @@ export class StoreService {
       params: { subtotal: String(subtotal) },
     });
   }
+
+  health(): Observable<{ status: string; cloudinaryConfigured?: boolean }> {
+    return this.http.get<{ status: string; cloudinaryConfigured?: boolean }>(`${this.api}/health`);
+  }
 }

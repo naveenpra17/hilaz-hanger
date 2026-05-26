@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { UploadService } from '../../../core/services/upload.service';
+import { StoreService } from '../../../core/services/store.service';
 import { Product } from '../../../core/models/product.model';
 
 const LABEL_OPTIONS = ['BESTSELLER', 'NEW ARRIVAL', 'TRENDING', 'FLASH SALE'];
@@ -43,12 +44,25 @@ interface GalleryImage {
             </div>
           }
         </div>
-        <input type="file" accept="image/*" class="text-sm w-full" (change)="onFileSelected($event)" [disabled]="uploading()" />
+        @if (!cloudinaryReady()) {
+          <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 leading-relaxed">
+            File upload is off until Cloudinary is set on the API (Render → Environment):
+            <strong>CLOUDINARY_CLOUD_NAME</strong>, <strong>CLOUDINARY_API_KEY</strong>, <strong>CLOUDINARY_API_SECRET</strong>.
+            Use <strong>Paste image URL</strong> below for now (e.g. from Cloudinary Media Library or any https image link).
+          </p>
+        }
+        <input
+          type="file"
+          accept="image/*"
+          class="text-sm w-full"
+          (change)="onFileSelected($event)"
+          [disabled]="uploading() || !cloudinaryReady()"
+        />
         @if (uploading()) {
           <p class="text-xs text-burgundy-600">Uploading to Cloudinary...</p>
         }
         <div class="flex gap-2">
-          <input class="input-field text-sm flex-1" placeholder="Paste image URL" [(ngModel)]="newImageUrl" name="newUrl" />
+          <input class="input-field text-sm flex-1" placeholder="Paste image URL (https://...)" [(ngModel)]="newImageUrl" name="newUrl" />
           <button type="button" class="btn-secondary text-sm shrink-0" (click)="addImageUrl()">Add URL</button>
         </div>
       </div>
@@ -176,8 +190,10 @@ export class ProductFormComponent implements OnInit {
   ];
   newImageUrl = '';
   readonly uploading = signal(false);
+  readonly cloudinaryReady = signal(false);
 
   private readonly uploadService = inject(UploadService);
+  private readonly storeService = inject(StoreService);
 
   constructor(
     private route: ActivatedRoute,
@@ -251,6 +267,10 @@ export class ProductFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.storeService.health().subscribe({
+      next: (h) => this.cloudinaryReady.set(!!h.cloudinaryConfigured),
+      error: () => this.cloudinaryReady.set(false),
+    });
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEdit = true;
