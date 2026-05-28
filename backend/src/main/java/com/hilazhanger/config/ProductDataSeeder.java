@@ -19,10 +19,12 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Configuration
 public class ProductDataSeeder {
@@ -72,12 +74,19 @@ public class ProductDataSeeder {
         }
 
         int imported = 0;
+        int failed = 0;
+        Set<String> usedSlugs = new HashSet<>();
         for (Map.Entry<String, List<ImageRow>> entry : grouped.entrySet()) {
-            Product product = buildProduct(entry.getKey(), entry.getValue(), categories);
-            productRepository.save(product);
-            imported++;
+            try {
+                Product product = buildProduct(entry.getKey(), entry.getValue(), categories, usedSlugs);
+                productRepository.save(product);
+                imported++;
+            } catch (Exception ex) {
+                failed++;
+                log.error("Failed importing product '{}': {}", entry.getKey(), ex.getMessage());
+            }
         }
-        log.info("Imported {} products from {}", imported, SOURCE_FILE.toAbsolutePath());
+        log.info("Imported {} products (failed: {}) from {}", imported, failed, SOURCE_FILE.toAbsolutePath());
     }
 
     private static void clearExistingData(JdbcTemplate jdbcTemplate) {
@@ -111,9 +120,10 @@ public class ProductDataSeeder {
     private static Product buildProduct(
             String name,
             List<ImageRow> images,
-            Map<String, Category> categories
+            Map<String, Category> categories,
+            Set<String> usedSlugs
     ) {
-        String slug = slugify(name);
+        String slug = uniqueSlug(name, usedSlugs);
         String categorySlug = guessCategory(name);
         Category category = categories.get(categorySlug);
 
@@ -171,7 +181,8 @@ public class ProductDataSeeder {
     }
 
     private static String cleanName(String value) {
-        return value.replace("\u200B", "").trim();
+        String cleaned = value.replace("\u200B", "").trim();
+        return cleaned.replaceFirst("^L\\d+:", "").trim();
     }
 
     private static String slugify(String name) {
@@ -179,6 +190,22 @@ public class ProductDataSeeder {
                 .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("(^-+|-+$)", "");
+    }
+
+    private static String uniqueSlug(String name, Set<String> usedSlugs) {
+        String base = slugify(name);
+        if (base.isBlank()) base = "product";
+        if (base.length() > 240) base = base.substring(0, 240).replaceAll("-+$", "");
+        String candidate = base;
+        int i = 2;
+        while (usedSlugs.contains(candidate)) {
+            String suffix = "-" + i++;
+            int maxBase = Math.max(1, 240 - suffix.length());
+            String trimmed = base.length() > maxBase ? base.substring(0, maxBase).replaceAll("-+$", "") : base;
+            candidate = trimmed + suffix;
+        }
+        usedSlugs.add(candidate);
+        return candidate;
     }
 
     private static Path resolveSourceFile() {
