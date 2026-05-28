@@ -29,7 +29,7 @@ import { Category } from '../../../core/models/category.model';
 
           <a routerLink="/" class="flex items-center gap-2 shrink-0 min-w-0" (click)="menuOpen.set(false)">
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center text-burgundy-700 font-serif font-bold text-xs sm:text-sm shrink-0">H</div>
-            <span class="font-serif text-base sm:text-lg font-semibold truncate max-w-[120px] xs:max-w-none sm:max-w-none">Hilaz Hanger</span>
+            <span class="font-serif text-base sm:text-lg font-semibold truncate max-w-[140px] xs:max-w-none sm:max-w-none">Hilaz Hanger</span>
           </a>
 
           @if (!compact()) {
@@ -64,7 +64,11 @@ import { Category } from '../../../core/models/category.model';
                   [(ngModel)]="searchQuery"
                   (keydown.enter)="goSearch()"
                 />
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gold pointer-events-none">🔍</span>
+                <span class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gold flex items-center justify-center text-white pointer-events-none">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.1-4.65a5.75 5.75 0 1 1-11.5 0 5.75 5.75 0 0 1 11.5 0Z"/>
+                  </svg>
+                </span>
               </div>
             </div>
           }
@@ -72,7 +76,9 @@ import { Category } from '../../../core/models/category.model';
           <div class="flex items-center gap-0.5 sm:gap-2 shrink-0">
             <a routerLink="/saved" class="p-2 hover:text-gold hidden sm:flex min-w-[40px] min-h-[40px] items-center justify-center" aria-label="Wishlist">♡</a>
             <a routerLink="/cart" class="p-2 hover:text-gold relative min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Cart" (click)="menuOpen.set(false)">
-              🛒
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4h2l1.2 11.2a2 2 0 0 0 2 1.8h7.8a2 2 0 0 0 2-1.6L19.5 7H7.2M9 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/>
+              </svg>
               @if (cartCount() > 0) {
                 <span class="absolute top-1 right-0.5 bg-gold text-burgundy-900 text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center">{{ cartCount() }}</span>
               }
@@ -101,7 +107,11 @@ import { Category } from '../../../core/models/category.model';
                 [(ngModel)]="searchQuery"
                 (keydown.enter)="goSearch()"
               />
-              <span class="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-gold flex items-center justify-center text-white text-sm pointer-events-none">🔍</span>
+              <span class="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-gold flex items-center justify-center text-white text-sm pointer-events-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.1-4.65a5.75 5.75 0 1 1-11.5 0 5.75 5.75 0 0 1 11.5 0Z"/>
+                </svg>
+              </span>
             </div>
           }
 

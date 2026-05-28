@@ -30,33 +30,35 @@ import { onImageError, PLACEHOLDER_PRODUCT } from '../../core/constants/media-ur
         <a routerLink="/shop" class="text-sm text-burgundy-600 mb-4 inline-flex items-center min-h-[44px]">← Back</a>
 
         <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-12 lg:items-start">
-        <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-carousel mb-4 lg:mb-0 lg:sticky lg:top-24">
-          <img
-            [src]="currentImage()"
-            [alt]="p.name"
-            class="w-full aspect-square sm:aspect-[4/5] lg:aspect-square object-cover"
-            (error)="onImageError($event)"
-          />
-          @for (label of p.labels; track label) {
-            <span class="absolute top-3 right-3 bg-burgundy-800 text-white text-xs font-bold px-2 py-1 rounded uppercase">{{ label }}</span>
+        <div class="space-y-3 lg:sticky lg:top-24">
+          <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-carousel">
+            <img
+              [src]="currentImage()"
+              [alt]="p.name"
+              class="w-full aspect-square sm:aspect-[4/5] lg:aspect-square object-cover"
+              (error)="onImageError($event)"
+            />
+            @for (label of p.labels; track label) {
+              <span class="absolute top-3 right-3 bg-burgundy-800 text-white text-xs font-bold px-2 py-1 rounded uppercase">{{ label }}</span>
+            }
+            <span class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">{{ imageIndex() + 1 }} / {{ (p.images?.length ?? 0) || 1 }}</span>
+            <button type="button" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80" (click)="prevImage(p)">‹</button>
+            <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80" (click)="nextImage(p)">›</button>
+          </div>
+
+          @if ((p.images?.length ?? 0) > 1) {
+            <div class="flex gap-2 overflow-x-auto pb-2">
+              <span class="text-xs text-gray-500 self-center mr-1">GALLERY</span>
+              @for (img of p.images; track $index) {
+                <button type="button" (click)="imageIndex.set($index)" class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border-2" [class.border-burgundy-800]="$index === imageIndex()" [class.border-transparent]="$index !== imageIndex()">
+                  <img [src]="img.url" class="w-full h-full object-cover" alt="" />
+                </button>
+              }
+            </div>
           }
-          <span class="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">{{ imageIndex() + 1 }} / {{ (p.images?.length ?? 0) || 1 }}</span>
-          <button type="button" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80" (click)="prevImage(p)">‹</button>
-          <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80" (click)="nextImage(p)">›</button>
         </div>
 
-        @if ((p.images?.length ?? 0) > 1) {
-          <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <span class="text-xs text-gray-500 self-center mr-1">GALLERY</span>
-            @for (img of p.images; track $index) {
-              <button type="button" (click)="imageIndex.set($index)" class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border-2" [class.border-burgundy-800]="$index === imageIndex()" [class.border-transparent]="$index !== imageIndex()">
-                <img [src]="img.url" class="w-full h-full object-cover" alt="" />
-              </button>
-            }
-          </div>
-        }
-
-        <div class="lg:pt-0">
+        <div class="lg:pt-0 mt-5 lg:mt-0">
         <h1 class="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-burgundy-900">{{ p.name }}</h1>
         <div class="flex items-baseline gap-3 mt-2">
           <span class="text-2xl font-bold">₹{{ p.price }}</span>
@@ -121,7 +123,7 @@ import { onImageError, PLACEHOLDER_PRODUCT } from '../../core/constants/media-ur
           }
         </div>
 
-        <div class="grid grid-cols-1 xs:grid-cols-2 gap-3 mt-6 sticky bottom-[4.5rem] lg:static lg:bottom-auto bg-cream/95 lg:bg-transparent py-3 lg:py-0 -mx-4 px-4 sm:mx-0 sm:px-0 lg:mx-0 border-t border-burgundy-100 lg:border-0 z-30 lg:z-auto">
+        <div class="grid grid-cols-1 xs:grid-cols-2 gap-3 mt-6">
           <button type="button" class="btn-secondary flex items-center justify-center gap-2 w-full" (click)="addToCart(p)">🛒 Add to Cart</button>
           <button type="button" class="btn-primary w-full" (click)="buyNow(p)">Buy Now</button>
         </div>
