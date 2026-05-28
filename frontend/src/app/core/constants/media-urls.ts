@@ -14,13 +14,7 @@ export const HERO_SLIDES = [
     title: 'Special Offer',
     subtitle: 'Buy 3 OR MORE ITEMS & Receive 10% OFF',
     tagline: 'Where fantasy unfolds',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1595777457583-95e059fdfcdc?auto=format&fit=crop&w=1200&q=80',
-    title: 'Trending Styles',
-    subtitle: 'Premium Mulmul & Silk Sets',
-    tagline: 'Elevate your everyday elegance',
-  },
+  }
 ] as const;
 
 export function onImageError(event: Event): void {
