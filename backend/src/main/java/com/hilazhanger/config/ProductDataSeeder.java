@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
@@ -63,7 +64,16 @@ public class ProductDataSeeder {
             log.warn("Local source file not found at {}. Falling back to URL.", SOURCE_FILE.toAbsolutePath());
         }
 
-        Map<String, List<ImageRow>> grouped = parseSource(loadSourceLines());
+        List<String> sourceLines;
+        try {
+            sourceLines = loadSourceLines();
+        } catch (Exception ex) {
+            // Never clear catalog if source cannot be loaded.
+            log.error("Catalog import aborted: unable to read source ({}). Keeping existing products.", ex.getMessage());
+            return;
+        }
+
+        Map<String, List<ImageRow>> grouped = parseSource(sourceLines);
         if (grouped.isEmpty()) {
             log.warn("Skipping catalog import: source had no valid rows");
             return;
@@ -96,7 +106,10 @@ public class ProductDataSeeder {
         if (Files.exists(SOURCE_FILE)) {
             return Files.readAllLines(SOURCE_FILE);
         }
-        try (var in = URI.create(productsSourceUrl).toURL().openStream()) {
+        URLConnection con = URI.create(productsSourceUrl).toURL().openConnection();
+        con.setConnectTimeout(15_000);
+        con.setReadTimeout(30_000);
+        try (var in = con.getInputStream()) {
             String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
             return text.lines().toList();
         }
