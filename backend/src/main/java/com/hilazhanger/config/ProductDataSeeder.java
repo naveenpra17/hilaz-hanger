@@ -13,6 +13,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -117,14 +118,46 @@ public class ProductDataSeeder {
 
     private static void clearExistingData(JdbcTemplate jdbcTemplate) {
         // Clear catalog and dependent product-linked records only.
-        jdbcTemplate.update("UPDATE order_items SET product_id = NULL, variant_id = NULL");
-        jdbcTemplate.update("DELETE FROM reviews");
-        jdbcTemplate.update("DELETE FROM wishlists");
-        jdbcTemplate.update("DELETE FROM cart_items");
-        jdbcTemplate.update("DELETE FROM carts");
-        jdbcTemplate.update("DELETE FROM product_images");
-        jdbcTemplate.update("DELETE FROM product_variants");
-        jdbcTemplate.update("DELETE FROM products");
+        safeUpdate(jdbcTemplate, "UPDATE order_items SET product_id = NULL, variant_id = NULL");
+        safeUpdate(jdbcTemplate, "DELETE FROM reviews");
+        safeUpdate(jdbcTemplate, "DELETE FROM wishlists");
+        safeUpdate(jdbcTemplate, "DELETE FROM cart_items");
+        safeUpdate(jdbcTemplate, "DELETE FROM carts");
+        safeUpdate(jdbcTemplate, "DELETE FROM product_images");
+        safeUpdate(jdbcTemplate, "DELETE FROM product_variants");
+        safeUpdate(jdbcTemplate, "DELETE FROM products");
+    }
+
+    private static void safeUpdate(JdbcTemplate jdbcTemplate, String sql) {
+        try {
+            if (!tableExistsForSql(jdbcTemplate, sql)) {
+                log.warn("Skipping SQL (table missing): {}", sql);
+                return;
+            }
+            jdbcTemplate.update(sql);
+        } catch (Exception ex) {
+            log.warn("Skipping SQL due to DB/schema mismatch: {} ({})", sql, ex.getMessage());
+        }
+    }
+
+    private static boolean tableExistsForSql(JdbcTemplate jdbcTemplate, String sql) {
+        String[] parts = sql.split("\\s+");
+        if (parts.length < 3) return true;
+        String table;
+        if ("UPDATE".equalsIgnoreCase(parts[0])) {
+            table = parts[1];
+        } else if ("DELETE".equalsIgnoreCase(parts[0]) && "FROM".equalsIgnoreCase(parts[1])) {
+            table = parts[2];
+        } else {
+            return true;
+        }
+        String clean = table.replaceAll("[^a-zA-Z0-9_]", "");
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_name=?",
+                Integer.class,
+                clean
+        );
+        return count != null && count > 0;
     }
 
     private static Map<String, List<ImageRow>> parseSource(List<String> lines) {
