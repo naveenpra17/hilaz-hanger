@@ -22,7 +22,7 @@ import { BRAND } from '../../core/content/brand-content';
       </div>
 
       <h1 class="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl text-center text-burgundy-900 font-bold leading-tight px-2">
-        Elevate Your <span class="style-underline">Style</span> Journey
+        Elevate Your Style Journey
       </h1>
 
       <div class="mt-6 flex gap-4 max-w-2xl mx-auto">

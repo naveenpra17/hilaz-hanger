@@ -24,22 +24,26 @@ interface Slide {
           (error)="onImageError($event)"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/5 sm:from-black/50 sm:via-transparent sm:to-transparent"></div>
-        <span class="absolute top-3 right-3 bg-black/40 text-white text-xs px-2 py-1 rounded-full">
-          {{ String(current() + 1).padStart(2, '0') }} / {{ String(slides.length).padStart(2, '0') }}
-        </span>
+        @if (slides.length > 1) {
+          <span class="absolute top-3 right-3 bg-black/40 text-white text-xs px-2 py-1 rounded-full">
+            {{ String(current() + 1).padStart(2, '0') }} / {{ String(slides.length).padStart(2, '0') }}
+          </span>
+        }
         <button type="button" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/30 backdrop-blur flex items-center justify-center text-white" (click)="prev()">‹</button>
         <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/30 backdrop-blur flex items-center justify-center text-white" (click)="next()">›</button>
-        <div class="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5">
-          @for (s of slides; track $index) {
-            <button
-              type="button"
-              class="w-2 h-2 rounded-full transition-colors"
-              [ngClass]="$index === current() ? 'bg-white' : 'bg-white/40'"
-              (click)="current.set($index)"
-              [attr.aria-label]="'Slide ' + ($index + 1)"
-            ></button>
-          }
-        </div>
+        @if (slides.length > 1) {
+          <div class="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5">
+            @for (s of slides; track $index) {
+              <button
+                type="button"
+                class="w-2 h-2 rounded-full transition-colors"
+                [ngClass]="$index === current() ? 'bg-white' : 'bg-white/40'"
+                (click)="current.set($index)"
+                [attr.aria-label]="'Slide ' + ($index + 1)"
+              ></button>
+            }
+          </div>
+        }
       </div>
     </div>
   `,
