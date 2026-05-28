@@ -43,7 +43,10 @@ public class RazorpayService {
 
     public RazorpayOrderResult createOrder(String receipt, BigDecimal amountInr) {
         if (!enabled) {
-            return new RazorpayOrderResult(null, keyId.isBlank() ? "rzp_test_placeholder" : keyId, toPaise(amountInr), false);
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Razorpay is not configured on API. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Render."
+            );
         }
         try {
             RazorpayClient client = new RazorpayClient(keyId, keySecret);

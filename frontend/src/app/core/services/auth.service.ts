@@ -14,14 +14,16 @@ export class AuthService {
   private readonly userSignal = signal<User | null>(this.loadUser());
 
   readonly user = this.userSignal.asReadonly();
-  readonly isLoggedIn = computed(() => !!this.userSignal());
+  readonly isLoggedIn = computed(() => !!this.userSignal() && !!this.token());
   readonly isAdmin = computed(() => this.userSignal()?.role === 'ADMIN');
-  readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
+  readonly token = signal<string | null>(this.loadToken());
 
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+  ) {
+    this.clearExpiredSession();
+  }
 
   login(req: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.api}/login`, req).pipe(
@@ -59,6 +61,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
+    this.clearExpiredSession();
     return this.token();
   }
 
@@ -76,6 +79,35 @@ export class AuthService {
       return JSON.parse(raw) as User;
     } catch {
       return null;
+    }
+  }
+
+  private loadToken(): string | null {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token || this.isExpired(token)) return null;
+    return token;
+  }
+
+  private clearExpiredSession(): void {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token || !this.isExpired(token)) return;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    this.token.set(null);
+    this.userSignal.set(null);
+  }
+
+  private isExpired(token: string): boolean {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) return true;
+      const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const payload = JSON.parse(payloadJson) as { exp?: number };
+      if (!payload.exp) return false;
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp <= now;
+    } catch {
+      return true;
     }
   }
 }

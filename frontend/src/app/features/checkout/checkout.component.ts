@@ -261,7 +261,7 @@ export class CheckoutComponent implements OnInit {
         }
         if (!res.razorpayOrderId || !this.paymentService.isConfigured(res.razorpayKeyId)) {
           this.error.set(
-            'Razorpay is not configured. Set RAZORPAY_KEY_ID in backend and razorpayKey in frontend environment.'
+            'Razorpay is not configured on API. Ask admin to set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Render.'
           );
           this.loading.set(false);
           return;
@@ -304,7 +304,11 @@ export class CheckoutComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.error.set(err?.error?.message ?? 'Checkout failed. Is the API running?');
+        const msg =
+          err?.status === 401
+            ? 'Session expired. Please log in again, or continue as guest checkout.'
+            : err?.error?.message ?? 'Checkout failed. Is the API running?';
+        this.error.set(msg);
         this.loading.set(false);
       },
     });
