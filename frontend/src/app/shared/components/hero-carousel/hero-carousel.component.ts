@@ -16,14 +16,14 @@ interface Slide {
   imports: [RouterLink, NgClass],
   template: `
     <div class="relative mt-3 sm:mt-4 page-container rounded-xl sm:rounded-2xl overflow-hidden shadow-carousel">
-      <div class="aspect-[4/3] sm:aspect-[5/3] md:aspect-[16/9] lg:aspect-[21/9] relative">
+      <div class="aspect-[4/3] sm:aspect-[5/3] md:aspect-[16/9] lg:aspect-[21/9] relative bg-black">
         <img
           [src]="slides[current()].image"
           [alt]="slides[current()].title"
-          class="w-full h-full object-cover"
+          class="w-full h-full object-contain sm:object-cover"
           (error)="onImageError($event)"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/5 sm:from-black/50 sm:via-transparent sm:to-transparent"></div>
         <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
           <p class="text-gold text-xs font-semibold tracking-wider uppercase">{{ slides[current()].title }}</p>
           <h2 class="font-serif text-xl sm:text-2xl font-bold mt-1">{{ slides[current()].subtitle }}</h2>
