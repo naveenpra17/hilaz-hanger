@@ -16,8 +16,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -35,6 +37,8 @@ public class ProductDataSeeder {
     private static final List<String> DEFAULT_SIZES = List.of("S", "M", "L", "XL");
     @Value("${app.seed.replace-products-from-file:false}")
     private boolean replaceProductsFromFile;
+    @Value("${app.seed.products-source-url:https://raw.githubusercontent.com/naveenpra17/hilaz-hanger/main/product_links_separated.txt}")
+    private String productsSourceUrl;
 
     @Bean
     CommandLineRunner seedProducts(
@@ -56,13 +60,12 @@ public class ProductDataSeeder {
             return;
         }
         if (!Files.exists(SOURCE_FILE)) {
-            log.warn("Skipping catalog import: {} not found", SOURCE_FILE.toAbsolutePath());
-            return;
+            log.warn("Local source file not found at {}. Falling back to URL.", SOURCE_FILE.toAbsolutePath());
         }
 
-        Map<String, List<ImageRow>> grouped = parseSource(Files.readAllLines(SOURCE_FILE));
+        Map<String, List<ImageRow>> grouped = parseSource(loadSourceLines());
         if (grouped.isEmpty()) {
-            log.warn("Skipping catalog import: {} is empty", SOURCE_FILE.toAbsolutePath());
+            log.warn("Skipping catalog import: source had no valid rows");
             return;
         }
 
@@ -87,6 +90,16 @@ public class ProductDataSeeder {
             }
         }
         log.info("Imported {} products (failed: {}) from {}", imported, failed, SOURCE_FILE.toAbsolutePath());
+    }
+
+    private List<String> loadSourceLines() throws Exception {
+        if (Files.exists(SOURCE_FILE)) {
+            return Files.readAllLines(SOURCE_FILE);
+        }
+        try (var in = URI.create(productsSourceUrl).toURL().openStream()) {
+            String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            return text.lines().toList();
+        }
     }
 
     private static void clearExistingData(JdbcTemplate jdbcTemplate) {
