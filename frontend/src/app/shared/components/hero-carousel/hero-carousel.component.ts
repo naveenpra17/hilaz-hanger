@@ -24,12 +24,6 @@ interface Slide {
           (error)="onImageError($event)"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/5 sm:from-black/50 sm:via-transparent sm:to-transparent"></div>
-        <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
-          <p class="text-gold text-xs font-semibold tracking-wider uppercase">{{ slides[current()].title }}</p>
-          <h2 class="font-serif text-xl sm:text-2xl font-bold mt-1">{{ slides[current()].subtitle }}</h2>
-          <p class="text-sm text-white/90 italic mt-1">{{ slides[current()].tagline }}</p>
-          <a routerLink="/shop" class="inline-block mt-3 text-sm font-semibold underline hover:text-gold">Shop Now →</a>
-        </div>
         <span class="absolute top-3 right-3 bg-black/40 text-white text-xs px-2 py-1 rounded-full">
           {{ String(current() + 1).padStart(2, '0') }} / {{ String(slides.length).padStart(2, '0') }}
         </span>

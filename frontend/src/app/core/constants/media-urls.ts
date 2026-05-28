@@ -8,12 +8,6 @@ export const HERO_SLIDES = [
     title: 'New Collection',
     subtitle: 'Premium Fashion',
     tagline: 'Where fantasy unfolds',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80',
-    title: 'Special Offer',
-    subtitle: 'Buy 3 OR MORE ITEMS & Receive 10% OFF',
-    tagline: 'Where fantasy unfolds',
   }
 ] as const;
 
