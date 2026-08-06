@@ -17,25 +17,43 @@ public class DataSeeder {
             UserRepository userRepository,
             PasswordEncoder encoder,
             @Value("${app.seed.admin-email:}") String adminEmail,
-            @Value("${app.seed.admin-password:}") String adminPassword
+            @Value("${app.seed.admin-password:}") String adminPassword,
+            @Value("${app.seed.admin-reset-password:false}") boolean resetAdminPassword
     ) {
         return args -> {
             if (adminEmail != null && !adminEmail.isBlank()
                     && adminPassword != null && !adminPassword.isBlank()) {
-                seedIfMissing(userRepository, encoder, adminEmail, "Admin", adminPassword, UserRole.ADMIN);
+                seedAdmin(userRepository, encoder, adminEmail, adminPassword, resetAdminPassword);
             }
         };
     }
 
-    private void seedIfMissing(UserRepository repo, PasswordEncoder encoder,
-                               String email, String name, String password, UserRole role) {
-        if (!repo.existsByEmail(email)) {
-            repo.save(User.builder()
-                    .email(email)
-                    .fullName(name)
-                    .passwordHash(encoder.encode(password))
-                    .role(role)
-                    .build());
+    private void seedAdmin(
+            UserRepository repo,
+            PasswordEncoder encoder,
+            String email,
+            String password,
+            boolean resetPassword
+    ) {
+        String normalizedEmail = email.trim().toLowerCase();
+        var existing = repo.findByEmail(normalizedEmail);
+        if (existing.isPresent()) {
+            if (!resetPassword) {
+                return;
+            }
+            User user = existing.get();
+            user.setPasswordHash(encoder.encode(password));
+            user.setRole(UserRole.ADMIN);
+            user.setActive(true);
+            repo.save(user);
+            return;
         }
+
+        repo.save(User.builder()
+                .email(normalizedEmail)
+                .fullName("Admin")
+                .passwordHash(encoder.encode(password))
+                .role(UserRole.ADMIN)
+                .build());
     }
 }

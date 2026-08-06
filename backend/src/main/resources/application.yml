@@ -73,5 +73,8 @@ app:
     twilio-auth-token: ${TWILIO_AUTH_TOKEN:}
     twilio-from: ${TWILIO_FROM_PHONE:}
   seed:
-    replace-products-from-file: ${APP_SEED_REPLACE_PRODUCTS_FROM_FILE:true}
+    admin-email: ${APP_SEED_ADMIN_EMAIL:}
+    admin-password: ${APP_SEED_ADMIN_PASSWORD:}
+    admin-reset-password: ${APP_SEED_ADMIN_RESET_PASSWORD:false}
+    replace-products-from-file: ${APP_SEED_REPLACE_PRODUCTS_FROM_FILE:false}
     products-source-url: ${APP_SEED_PRODUCTS_SOURCE_URL:https://raw.githubusercontent.com/naveenpra17/hilaz-hanger/main/product_links_separated.txt}
