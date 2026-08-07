@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HeroCarouselComponent } from '../../shared/components/hero-carousel/hero-carousel.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { ProductService } from '../../core/services/product.service';
 import { StoreConfigService } from '../../core/services/store-config.service';
 import { Product } from '../../core/models/product.model';
@@ -10,7 +11,7 @@ import { BRAND } from '../../core/content/brand-content';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, HeroCarouselComponent, ProductCardComponent],
+  imports: [RouterLink, HeroCarouselComponent, ProductCardComponent, LoadingSpinnerComponent],
   template: `
     <app-hero-carousel />
 
@@ -53,7 +54,7 @@ import { BRAND } from '../../core/content/brand-content';
         </div>
 
         @if (loading()) {
-          <p class="text-center text-gray-500 py-8">Loading products...</p>
+          <app-loading-spinner message="Loading products..." />
         } @else if (error()) {
           <div class="text-center py-8 px-4 bg-red-50 rounded-xl border border-red-100">
             <p class="text-red-700 text-sm">{{ error() }}</p>

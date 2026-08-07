@@ -5,11 +5,12 @@ import { DatePipe } from '@angular/common';
 import { OrderService } from '../../core/services/order.service';
 import { OrderTracking } from '../../core/models/order.model';
 import { StoreConfigService } from '../../core/services/store-config.service';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-track-order',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [FormsModule, RouterLink, DatePipe, LoadingSpinnerComponent],
   template: `
     <div class="page-container-narrow page-section pb-20">
       <h1 class="font-serif text-2xl font-bold text-burgundy-900 mb-2">Track your order</h1>
@@ -18,7 +19,14 @@ import { StoreConfigService } from '../../core/services/store-config.service';
       <form class="section-card space-y-3 mb-6" (ngSubmit)="track()">
         <input class="input-field" type="email" placeholder="Email used at checkout" [(ngModel)]="email" name="email" required />
         <input class="input-field" placeholder="Order number e.g. HH-ABC12345" [(ngModel)]="orderNumber" name="order" required />
-        <button type="submit" class="btn-primary w-full" [disabled]="loading()">Track</button>
+        <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2" [disabled]="loading()">
+          @if (loading()) {
+            <app-loading-spinner size="sm" [inline]="true" />
+            <span>Tracking...</span>
+          } @else {
+            <span>Track</span>
+          }
+        </button>
       </form>
 
       @if (error()) {

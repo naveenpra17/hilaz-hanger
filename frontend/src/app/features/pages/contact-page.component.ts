@@ -5,11 +5,12 @@ import { StoreService } from '../../core/services/store.service';
 import { StoreConfigService } from '../../core/services/store-config.service';
 import { BRAND } from '../../core/content/brand-content';
 import { SeoService } from '../../core/services/seo.service';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-contact-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, LoadingSpinnerComponent],
   template: `
     <div class="page-container-narrow page-section pb-20">
       <a routerLink="/" class="text-sm text-burgundy-600 mb-4 inline-block">← Home</a>
@@ -29,7 +30,14 @@ import { SeoService } from '../../core/services/seo.service';
         @if (feedback()) {
           <p class="text-sm" [class.text-green-700]="ok()" [class.text-red-600]="!ok()">{{ feedback() }}</p>
         }
-        <button type="submit" class="btn-primary w-full" [disabled]="loading()">Send message</button>
+        <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2" [disabled]="loading()">
+          @if (loading()) {
+            <app-loading-spinner size="sm" [inline]="true" />
+            <span>Sending...</span>
+          } @else {
+            <span>Send message</span>
+          }
+        </button>
       </form>
     </div>
   `,

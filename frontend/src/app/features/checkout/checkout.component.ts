@@ -9,11 +9,12 @@ import { CouponService } from '../../core/services/coupon.service';
 import { StoreService } from '../../core/services/store.service';
 import { AddressService } from '../../core/services/address.service';
 import { SavedAddress } from '../../core/models/address.model';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, LoadingSpinnerComponent],
   template: `
     <div class="page-container-narrow page-section pb-28 lg:pb-10">
       <h1 class="font-serif text-2xl font-bold mb-6">Checkout</h1>
@@ -104,11 +105,16 @@ import { SavedAddress } from '../../core/models/address.model';
 
         <button
           type="button"
-          class="btn-primary w-full"
+          class="btn-primary w-full flex items-center justify-center gap-2"
           [disabled]="loading()"
           (click)="placeOrder()"
         >
-          {{ loading() ? 'Processing...' : 'Pay securely with Razorpay' }}
+          @if (loading()) {
+            <app-loading-spinner size="sm" [inline]="true" />
+            <span>Processing payment...</span>
+          } @else {
+            <span>Pay securely with Razorpay</span>
+          }
         </button>
       }
       <a routerLink="/cart" class="block text-center text-sm text-gray-500 mt-4">← Back to cart</a>

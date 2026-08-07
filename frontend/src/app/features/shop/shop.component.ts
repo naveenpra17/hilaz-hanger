@@ -2,6 +2,7 @@ import { Component, signal, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { ProductService } from '../../core/services/product.service';
 import { CategoryService } from '../../core/services/category.service';
 import { ProductPage } from '../../core/models/product.model';
@@ -10,7 +11,7 @@ import { Category } from '../../core/models/category.model';
 @Component({
   selector: 'app-shop',
   standalone: true,
-  imports: [FormsModule, ProductCardComponent, RouterLink],
+  imports: [FormsModule, ProductCardComponent, RouterLink, LoadingSpinnerComponent],
   template: `
     <div class="page-container page-section">
       <h1 class="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-burgundy-900 mb-4 sm:mb-6">Shop Collection</h1>
@@ -57,7 +58,7 @@ import { Category } from '../../core/models/category.model';
       </div>
 
       @if (loading()) {
-        <p class="text-center text-gray-500 py-12">Loading products...</p>
+        <app-loading-spinner message="Loading products..." />
       } @else if (error()) {
         <div class="text-center py-12 px-4 bg-red-50 rounded-xl">
           <p class="text-red-700 text-sm">{{ error() }}</p>

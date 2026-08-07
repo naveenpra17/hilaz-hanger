@@ -2,11 +2,12 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, LoadingSpinnerComponent],
   template: `
     <div class="max-w-md mx-auto px-4 py-12">
       <h1 class="font-serif text-2xl font-bold text-center text-burgundy-900 mb-8">Set new password</h1>
@@ -19,7 +20,14 @@ import { AuthService } from '../../../core/services/auth.service';
           @if (message()) {
             <p class="text-sm" [class.text-green-700]="success()" [class.text-red-600]="!success()">{{ message() }}</p>
           }
-          <button type="submit" class="btn-primary w-full" [disabled]="loading()">Update password</button>
+          <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2" [disabled]="loading()">
+            @if (loading()) {
+              <app-loading-spinner size="sm" [inline]="true" />
+              <span>Updating...</span>
+            } @else {
+              <span>Update password</span>
+            }
+          </button>
         </form>
       }
       <p class="text-center text-sm mt-6"><a routerLink="/login" class="text-burgundy-700 underline">Login</a></p>

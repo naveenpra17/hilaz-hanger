@@ -2,13 +2,17 @@ import { Component, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
 import { DashboardStats } from '../../../core/models/order.model';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LoadingSpinnerComponent],
   template: `
-    @if (stats(); as s) {
+    @if (loading()) {
+      <app-loading-spinner message="Loading dashboard..." />
+    } @else {
+      @if (stats(); as s) {
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-3 sm:gap-4 mb-6">
         <div class="section-card">
           <div class="flex justify-between items-center mb-4">
@@ -100,16 +104,25 @@ import { DashboardStats } from '../../../core/models/order.model';
           </tbody>
         </table>
       </div>
+      }
     }
   `,
 })
 export class DashboardComponent implements OnInit {
   readonly stats = signal<DashboardStats | null>(null);
+  readonly loading = signal(true);
 
   constructor(private orderService: OrderService) {}
 
   ngOnInit(): void {
-    this.orderService.getDashboard().subscribe((s) => this.stats.set(s));
+    this.loading.set(true);
+    this.orderService.getDashboard().subscribe({
+      next: (s) => {
+        this.stats.set(s);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
   barHeight(count: number): number {

@@ -4,11 +4,12 @@ import { DatePipe } from '@angular/common';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Order } from '../../core/models/order.model';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-my-orders',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, LoadingSpinnerComponent],
   template: `
     <div class="page-container page-section max-w-3xl mx-auto pb-28 lg:pb-10">
       <h1 class="font-serif text-2xl font-bold text-burgundy-900 mb-6">My Orders</h1>
@@ -18,7 +19,7 @@ import { Order } from '../../core/models/order.model';
           <a routerLink="/login" class="text-burgundy-700 font-medium underline">Log in</a> to see your orders.
         </p>
       } @else if (loading()) {
-        <p class="text-center text-gray-500 py-8">Loading orders...</p>
+        <app-loading-spinner message="Loading orders..." />
       } @else if (error()) {
         <p class="text-red-600 text-sm text-center py-8">{{ error() }}</p>
       } @else if (orders().length === 0) {

@@ -4,11 +4,12 @@ import { OrderService } from '../../../core/services/order.service';
 import { ProductService } from '../../../core/services/product.service';
 import { Order, OrderSource } from '../../../core/models/order.model';
 import { Product } from '../../../core/models/product.model';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, LoadingSpinnerComponent],
   template: `
     <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
       <h2 class="font-serif text-xl font-bold">Orders</h2>
@@ -26,7 +27,7 @@ import { Product } from '../../../core/models/product.model';
     }
 
     @if (loading()) {
-      <p class="text-gray-500 text-sm">Loading orders…</p>
+      <app-loading-spinner message="Loading orders..." />
     } @else if (!loadError() && orders().length === 0) {
       <p class="text-gray-500 text-sm">No orders yet. Website COD/checkouts will appear here after deploy.</p>
     }

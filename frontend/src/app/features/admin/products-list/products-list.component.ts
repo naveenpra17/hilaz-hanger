@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AdminProductRowComponent } from '../../../shared/components/admin-product-row/admin-product-row.component';
 import { ProductService } from '../../../core/services/product.service';
 import { ProductPage } from '../../../core/models/product.model';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, AdminProductRowComponent],
+  imports: [RouterLink, FormsModule, AdminProductRowComponent, LoadingSpinnerComponent],
   template: `
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6 -mt-2">
       <p class="text-sm text-gray-600">{{ page()?.totalElements ?? 0 }} products shown</p>
@@ -34,6 +35,10 @@ import { ProductPage } from '../../../core/models/product.model';
         >{{ f.label }}</button>
       }
     </div>
+
+    @if (loading()) {
+      <app-loading-spinner message="Loading products..." />
+    }
 
     <div class="space-y-4">
       @for (p of page()?.content ?? []; track p.id) {
@@ -64,6 +69,7 @@ export class ProductsListComponent {
   search = '';
   readonly filter = signal('all');
   readonly page = signal<ProductPage | null>(null);
+  readonly loading = signal(true);
   private currentPage = 0;
 
   readonly filters = [
@@ -79,6 +85,7 @@ export class ProductsListComponent {
   }
 
   load(): void {
+    this.loading.set(true);
     this.productService
       .getProducts({
         page: this.currentPage,
@@ -86,7 +93,13 @@ export class ProductsListComponent {
         search: this.search,
         filter: this.filter() === 'all' ? undefined : this.filter(),
       })
-      .subscribe((p) => this.page.set(p));
+      .subscribe({
+        next: (p) => {
+          this.page.set(p);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
   }
 
   goPage(n: number): void {

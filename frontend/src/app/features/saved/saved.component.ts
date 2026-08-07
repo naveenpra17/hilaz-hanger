@@ -4,18 +4,19 @@ import { WishlistService } from '../../core/services/wishlist.service';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { Product } from '../../core/models/product.model';
 import { AuthService } from '../../core/services/auth.service';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-saved',
   standalone: true,
-  imports: [RouterLink, ProductCardComponent],
+  imports: [RouterLink, ProductCardComponent, LoadingSpinnerComponent],
   template: `
     <div class="page-container page-section pb-20">
       <h1 class="font-serif text-2xl font-bold text-burgundy-900 mb-2">Saved Items</h1>
       @if (!auth.isLoggedIn()) {
         <p class="text-gray-600 mb-6"><a routerLink="/login" class="text-burgundy-700 underline">Log in</a> to save favourites.</p>
       } @else if (loading()) {
-        <p class="text-gray-500">Loading...</p>
+        <app-loading-spinner message="Loading saved items..." />
       } @else if (items().length === 0) {
         <p class="text-gray-500 mt-2 mb-6">Your wishlist is empty.</p>
         <a routerLink="/shop" class="btn-primary inline-block">Browse Shop</a>

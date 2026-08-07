@@ -2,12 +2,14 @@ import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SiteHeaderComponent } from '../../shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from '../../shared/components/site-footer/site-footer.component';
+import { RouteLoadingBarComponent } from '../../shared/components/route-loading-bar/route-loading-bar.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, SiteHeaderComponent, SiteFooterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SiteHeaderComponent, SiteFooterComponent, RouteLoadingBarComponent],
   template: `
+    <app-route-loading-bar />
     <div class="min-h-screen flex flex-col bg-cream-light">
       <app-site-header />
       <div class="bg-burgundy-800 text-white px-4 sm:px-6 py-5 sm:py-6">

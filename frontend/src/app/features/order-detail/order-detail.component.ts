@@ -3,13 +3,17 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { OrderService } from '../../core/services/order.service';
 import { Order } from '../../core/models/order.model';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, LoadingSpinnerComponent],
   template: `
-    @if (order(); as o) {
+    @if (loading()) {
+      <app-loading-spinner message="Loading order..." />
+    } @else {
+      @if (order(); as o) {
       <div class="page-container-narrow page-section pb-20">
         <a routerLink="/orders" class="text-sm text-burgundy-600 mb-4 inline-block">← My orders</a>
         <h1 class="font-serif text-2xl font-bold">{{ o.orderNumber }}</h1>
@@ -47,6 +51,7 @@ import { Order } from '../../core/models/order.model';
           <button type="button" class="btn-secondary mt-6" (click)="downloadInvoice(o.id)">Download tax invoice (PDF)</button>
         }
       </div>
+      }
     }
   `,
 })
@@ -54,10 +59,18 @@ export class OrderDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private orderService = inject(OrderService);
   readonly order = signal<Order | null>(null);
+  readonly loading = signal(true);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.orderService.getOrder(id).subscribe((o) => this.order.set(o));
+    this.loading.set(true);
+    this.orderService.getOrder(id).subscribe({
+      next: (o) => {
+        this.order.set(o);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
   timelineSteps(o: Order): { label: string; done: boolean }[] {

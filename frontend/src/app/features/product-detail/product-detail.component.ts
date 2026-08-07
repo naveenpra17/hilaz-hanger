@@ -10,15 +10,16 @@ import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { onImageError, PLACEHOLDER_PRODUCT } from '../../core/constants/media-urls';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [RouterLink, FormsModule, ProductCardComponent],
+  imports: [RouterLink, FormsModule, ProductCardComponent, LoadingSpinnerComponent],
   template: `
     @if (loading()) {
-      <div class="page-container page-section max-w-6xl text-center py-16 text-burgundy-700">Loading product…</div>
+      <app-loading-spinner message="Loading product..." />
     } @else if (loadError()) {
       <div class="page-container page-section max-w-6xl text-center py-16 space-y-4">
         <p class="text-burgundy-800">{{ loadError() }}</p>
