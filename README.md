@@ -80,12 +80,7 @@ App: **http://localhost:4200**
 > If Node.js is not installed globally, download portable Node once:
 > `tools/node/` is created automatically when using the commands above from this repo.
 
-### Demo Accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@hilazhanger.com | Admin@123 |
-| Customer | customer@hilazhanger.com | Customer@123 |
 
 ## Features
 
